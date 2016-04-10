@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'test.ui'
+# Form implementation generated from reading ui file 'othello.ui'
 #
 # Created by: PyQt5 UI code generator 5.5.1
 #
@@ -467,7 +467,7 @@ class Ui_MainWindow(object):
         self.pushButton_65.setObjectName("pushButton_65")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 575, 25))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 575, 48))
         self.menubar.setStyleSheet("background-color: rgb(0, 128, 255);\n"
 "selection-color: rgb(128, 255, 0);\n"
 "border-color: rgb(102, 102, 255);\n"
@@ -497,6 +497,6 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.menuMenu.setTitle(_translate("MainWindow", "opt"))
-        self.menuCtrl.setTitle(_translate("MainWindow", "ctrl"))
+        self.menuMenu.setTitle(_translate("MainWindow", "o&pt"))
+        self.menuCtrl.setTitle(_translate("MainWindow", "&ctrl"))
 

@@ -1310,7 +1310,7 @@ background-color: rgb(19, 146, 59);</string>
      <x>0</x>
      <y>0</y>
      <width>575</width>
-     <height>25</height>
+     <height>48</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -1332,12 +1332,12 @@ font-color: rgb(255, 255, 255);
 font: 14pt &quot;Courier&quot;;</string>
     </property>
     <property name="title">
-     <string>opt</string>
+     <string>o&amp;pt</string>
     </property>
    </widget>
    <widget class="QMenu" name="menuCtrl">
     <property name="title">
-     <string>ctrl</string>
+     <string>&amp;ctrl</string>
     </property>
    </widget>
    <addaction name="menuMenu"/>
