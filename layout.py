@@ -9,6 +9,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 class Ui_MainWindow(object):
+	def gridOnClick(self):
+		self.sender().setText("X")
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
 		MainWindow.resize(640, 640)
@@ -28,6 +30,7 @@ class Ui_MainWindow(object):
 				self.grid[x + y * 8].setText("")
 				self.grid[x + y * 8].setAutoDefault(False)
 				self.grid[x + y * 8].setObjectName("pushButton")
+				self.grid[x + y * 8].clicked.connect(self.gridOnClick)
 
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.menubar = QtWidgets.QMenuBar(MainWindow)
