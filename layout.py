@@ -31,13 +31,11 @@ class Ui_MainWindow(object):
 
 	# left click
 	def gridOnClick(self):
-		self.sender().setIcon(QtGui.QIcon("./src/black.jpg"))
-		print("Button " + str(self.sender().objectName()) + " left clicked")
+		self.sender().setIcon(QtGui.QIcon("./src/black.png"))
 
 	# right click
 	def gridOnRightClick(self):
-		self.sender().setIcon(QtGui.QIcon("./src/white.jpg"))
-		print("Button " + str(self.sender().objectName()) + " right clicked")
+		self.sender().setIcon(QtGui.QIcon("./src/white.png"))
 
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
@@ -56,17 +54,15 @@ class Ui_MainWindow(object):
 				self.grid[x + y * 8].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 		"background-color: rgb(19, 146, 59);")
 				self.grid[x + y * 8].setText("")
-				self.grid[x + y * 8].setIcon(QtGui.QIcon("./src/close.jpg"))
 				self.grid[x + y * 8].setAutoDefault(False)
 				self.grid[x + y * 8].setObjectName(str(x + y * 8))
-				# self.grid[x + y * 8].setMouseTracking(True)
-#  connect click event with gridOnClick
+				self.grid[x + y * 8].setIconSize(QtCore.QSize(55, 55))
+				#  connect click event with gridOnClick
 				self.grid[x + y * 8].clicked.connect(self.gridOnClick)
-#  creat event filter
+				#  creat event filter
 				self.grid[x + y * 8].installEventFilter(self)
-#  connect right click event with gridOnRightClick
+				#  connect right click event with gridOnRightClick
 				self.grid[x + y * 8].rightClicked.connect(self.gridOnRightClick)
-#				connect(self.grid[x + y * 8], SIGNAL(onRightClick), self.grid[x + y * 8], SLOT(gridOnRightClick))
 
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.menubar = QtWidgets.QMenuBar(MainWindow)
