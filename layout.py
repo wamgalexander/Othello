@@ -13,10 +13,13 @@ from PyQt5.QtCore import QObject, pyqtSignal
 class QRightClickButton(QtWidgets.QPushButton):
 	def __init__(self, parent):
 		QtWidgets.QPushButton.__init__(self, parent)
+
+	# custom define singal
 	rightClicked = pyqtSignal()
 
 class Ui_MainWindow(object):
 
+	# on click event
 	def eventFilter(self, obj, event):
 		if event.type() in (QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonDblClick):
 			if event.button() == QtCore.Qt.LeftButton:
@@ -25,11 +28,16 @@ class Ui_MainWindow(object):
 				obj.rightClicked.emit()
 				return False
 		return False
-	def gridOnClick(self):
-		 print("Button " + str(self.sender().objectName()) + " left clicked")
 
+	# left click
+	def gridOnClick(self):
+		self.sender().setIcon(QtGui.QIcon("black.jpg"))
+		print("Button " + str(self.sender().objectName()) + " left clicked")
+
+	# right click
 	def gridOnRightClick(self):
-         print("Button " + str(self.sender().objectName()) + " right clicked")
+		self.sender().setIcon(QtGui.QIcon("white.jpg"))
+		print("Button " + str(self.sender().objectName()) + " right clicked")
 
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
@@ -48,13 +56,18 @@ class Ui_MainWindow(object):
 				self.grid[x + y * 8].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 		"background-color: rgb(19, 146, 59);")
 				self.grid[x + y * 8].setText("")
+				self.grid[x + y * 8].setIcon(QtGui.QIcon("close.jpg"))
 				self.grid[x + y * 8].setAutoDefault(False)
-				self.grid[x + y * 8].setObjectName(str(x+y*8))
-				self.grid[x + y * 8].setMouseTracking(True)
+				self.grid[x + y * 8].setObjectName(str(x + y * 8))
+				# self.grid[x + y * 8].setMouseTracking(True)
+#  connect click event with gridOnClick
 				self.grid[x + y * 8].clicked.connect(self.gridOnClick)
+#  creat event filter
 				self.grid[x + y * 8].installEventFilter(self)
+#  connect right click event with gridOnRightClick
 				self.grid[x + y * 8].rightClicked.connect(self.gridOnRightClick)
 #				connect(self.grid[x + y * 8], SIGNAL(onRightClick), self.grid[x + y * 8], SLOT(gridOnRightClick))
+
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.menubar = QtWidgets.QMenuBar(MainWindow)
 		self.menubar.setGeometry(QtCore.QRect(0, 0, 575, 48))
