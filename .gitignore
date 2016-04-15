@@ -1,4 +1,4 @@
 .DS_Store
 __pycache__/
-othello.py
+layout.py
 .[0-9]*

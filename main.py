@@ -1,10 +1,10 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys # We need sys so that we can pass argv to QApplication
 
-import layout # This file holds our MainWindow and all design related things
+import othello # This file holds our MainWindow and all design related things
               # it also keeps events etc that we defined in Qt Designer
 
-class ExampleApp(QtWidgets.QMainWindow, layout.Ui_MainWindow):
+class ExampleApp(QtWidgets.QMainWindow, othello.Ui_MainWindow):
     def __init__(self):
         # Explaining super is out of the scope of this article
         # So please google it if you're not familar with it
