@@ -31,12 +31,12 @@ class Ui_MainWindow(object):
 
 	# left click
 	def gridOnClick(self):
-		self.sender().setIcon(QtGui.QIcon("black.jpg"))
+		self.sender().setIcon(QtGui.QIcon("./src/black.jpg"))
 		print("Button " + str(self.sender().objectName()) + " left clicked")
 
 	# right click
 	def gridOnRightClick(self):
-		self.sender().setIcon(QtGui.QIcon("white.jpg"))
+		self.sender().setIcon(QtGui.QIcon("./src/white.jpg"))
 		print("Button " + str(self.sender().objectName()) + " right clicked")
 
 	def setupUi(self, MainWindow):
@@ -56,7 +56,7 @@ class Ui_MainWindow(object):
 				self.grid[x + y * 8].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 		"background-color: rgb(19, 146, 59);")
 				self.grid[x + y * 8].setText("")
-				self.grid[x + y * 8].setIcon(QtGui.QIcon("close.jpg"))
+				self.grid[x + y * 8].setIcon(QtGui.QIcon("./src/close.jpg"))
 				self.grid[x + y * 8].setAutoDefault(False)
 				self.grid[x + y * 8].setObjectName(str(x + y * 8))
 				# self.grid[x + y * 8].setMouseTracking(True)
