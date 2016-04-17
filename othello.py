@@ -1,7 +1,10 @@
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+import functools
+
 import constants
+
 
 class QRightClickButton(QtWidgets.QPushButton):
 	def __init__(self, parent):
@@ -17,12 +20,19 @@ class Ui_MainWindow(object):
 	state = constants.MAIN
 	zoomInIndex = -1
 	placed = [constants.EMPTY] * 64
+	timer = QTimer()
+	timer1 = QTimer()
+
+	def blink(self, index):
+		for y in range(0, 4):
+			for x in range(0, 4):
+				self.grid[index + y + x * 8].setVisible(False if self.grid[index + y + x * 8].isVisible() else True)
 
 	# initialize
 	def init(self):
-		playerColor = constants.BLACK
-		state = constants.MAIN
-		zoomInIndex = -1
+		self.playerColor = constants.BLACK
+		self.state = constants.MAIN
+		self.zoomInIndex = -1
 		for i in range (0, 64):
 			self.placed[i] = constants.EMPTY
 
@@ -193,6 +203,10 @@ class Ui_MainWindow(object):
 
 		self.retranslateUi(MainWindow)
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
+		self.timer.timeout.connect(functools.partial(self.blink, index=0))
+		self.timer.start(1000/10)
+		self.timer1.timeout.connect(functools.partial(self.blink, index=36))
+		self.timer1.start(1000/20)
 
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
