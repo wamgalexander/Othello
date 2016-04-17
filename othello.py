@@ -20,8 +20,7 @@ class Ui_MainWindow(object):
 	state = constants.MAIN
 	zoomInIndex = -1
 	placed = [constants.EMPTY] * 64
-	timer = QTimer()
-	timer1 = QTimer()
+	timer = []
 
 	def blink(self, index):
 		for y in range(0, 4):
@@ -134,6 +133,9 @@ class Ui_MainWindow(object):
 
 		self.grid = []
 
+		for i in range(0, 4):
+			self.timer.append(QTimer())
+
 		for y in range(0, 8):
 			for x in range(0, 8):
 				self.grid.append(QRightClickButton(self.centralwidget))
@@ -203,10 +205,15 @@ class Ui_MainWindow(object):
 
 		self.retranslateUi(MainWindow)
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
-		self.timer.timeout.connect(functools.partial(self.blink, index=0))
-		self.timer.start(1000/10)
-		self.timer1.timeout.connect(functools.partial(self.blink, index=36))
-		self.timer1.start(1000/20)
+
+		self.timer[0].timeout.connect(functools.partial(self.blink, index=0))
+		self.timer[1].timeout.connect(functools.partial(self.blink, index=4))
+		self.timer[2].timeout.connect(functools.partial(self.blink, index=32))
+		self.timer[3].timeout.connect(functools.partial(self.blink, index=36))
+
+		for i in range(0, 4):
+			self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
+
 
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate

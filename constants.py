@@ -23,3 +23,6 @@ ZOOM_IN2_TABLE = [0, 0, 2, 2, 4, 4, 6, 6, \
 EMPTY = 0
 BLACK = 1
 WHITE = 2
+ONE_SEC = 1000
+
+FREQ = [10, 15, 20, 25]
