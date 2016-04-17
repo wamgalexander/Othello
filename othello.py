@@ -13,9 +13,18 @@ class QRightClickButton(QtWidgets.QPushButton):
 class Ui_MainWindow(object):
 
 	# declare variable
-	playerColor = 0 # 0 for black ; 1 for white
+	playerColor = constants.BLACK
 	state = constants.MAIN
 	zoomInIndex = -1
+	placed = [constants.EMPTY] * 64
+
+	# initialize
+	def init(self):
+		playerColor = constants.BLACK
+		state = constants.MAIN
+		zoomInIndex = -1
+		for i in range (0, 64):
+			self.placed[i] = constants.EMPTY
 
 	# on click event
 	def eventFilter(self, obj, event):
@@ -34,16 +43,22 @@ class Ui_MainWindow(object):
 			self.grid[i].setText(str(i + 1))
 		while self.state != constants.MAIN:
 			self.zoomOut()
+		self.init()
 
 
 	# places chess
 	def placeChess(self, grid):
+		if(self.placed[int(grid.objectName())]):
+			return
+
 		if self.playerColor:
 			grid.setIcon(QtGui.QIcon("./src/white.png"))
 			grid.setText("")
+			self.placed[int(grid.objectName())] = constants.WHITE
 		else:
 			grid.setIcon(QtGui.QIcon("./src/black.png"))
 			grid.setText("")
+			self.placed[int(grid.objectName())] = constants.BLACK
 		self.playerColor =  0 if self.playerColor else 1
 
 	def hideAllGrids(self):
