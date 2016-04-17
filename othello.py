@@ -27,6 +27,15 @@ class Ui_MainWindow(object):
 				return False
 		return False
 
+	# restart
+	def restart(self):
+		for i in range(0, 64):
+			self.grid[i].setIcon(QtGui.QIcon())
+			self.grid[i].setText(str(i + 1))
+		while self.state != constants.MAIN:
+			self.zoomOut()
+
+
 	# places chess
 	def placeChess(self, grid):
 		if self.playerColor:
@@ -42,7 +51,7 @@ class Ui_MainWindow(object):
 			self.grid[i].setVisible(False)
 
 	# zoom out
-	def zoomOut(self, grid):
+	def zoomOut(self):
 		if(self.state == constants.ZOOM_IN1):
 			self.hideAllGrids()
 			for y in range(0, 8):
@@ -99,6 +108,7 @@ class Ui_MainWindow(object):
 		self.centralwidget.setObjectName("centralwidget")
 
 		self.grid = []
+
 		for y in range(0, 8):
 			for x in range(0, 8):
 				self.grid.append(QRightClickButton(self.centralwidget))
@@ -115,30 +125,47 @@ class Ui_MainWindow(object):
 				self.grid[x + y * 8].installEventFilter(self)
 				#  connect right click event with gridOnRightClick
 				self.grid[x + y * 8].rightClicked.connect(self.gridOnRightClick)
+
+		# refresh button
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[64].setEnabled(True)
-		self.grid[64].setGeometry(QtCore.QRect(610, 210, 160, 160))
+		self.grid[64].setGeometry(QtCore.QRect(610, 70, 160, 160))
 		self.grid[64].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 									"background-color: rgb(19, 146, 59);")
+		self.grid[64].setIcon(QtGui.QIcon("./src/refresh.png"))
+		self.grid[64].setIconSize(QtCore.QSize(55, 55))
 		self.grid[64].setText("")
 		self.grid[64].setAutoDefault(False)
-		self.grid[64].setObjectName("64")
-		self.grid[64].clicked.connect(self.zoomOut)
+		self.grid[64].setObjectName("refresh")
+		self.grid[64].clicked.connect(self.restart)
+
+		# return button
+		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
+		self.grid[65].setEnabled(True)
+		self.grid[65].setGeometry(QtCore.QRect(610, 280, 160, 160))
+		self.grid[65].setStyleSheet("border-color: rgb(255, 255, 255);\n"
+									"background-color: rgb(19, 146, 59);")
+		self.grid[65].setIcon(QtGui.QIcon("./src/return.png"))
+		self.grid[65].setIconSize(QtCore.QSize(55, 55))
+		self.grid[65].setText("")
+		self.grid[65].setAutoDefault(False)
+		self.grid[65].setObjectName("return")
+		self.grid[65].clicked.connect(self.zoomOut)
 
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.menubar = QtWidgets.QMenuBar(MainWindow)
 		self.menubar.setGeometry(QtCore.QRect(0, 0, 575, 48))
 		self.menubar.setStyleSheet("background-color: rgb(0, 128, 255);\n"
-"selection-color: rgb(128, 255, 0);\n"
-"border-color: rgb(102, 102, 255);\n"
-"font: 14pt \"Courier\";")
+								   "selection-color: rgb(128, 255, 0);\n"
+								   "border-color: rgb(102, 102, 255);\n"
+								   "font: 14pt \"Courier\";")
 		self.menubar.setNativeMenuBar(False)
 		self.menubar.setObjectName("menubar")
 		self.menuMenu = QtWidgets.QMenu(self.menubar)
 		self.menuMenu.setStyleSheet("background-color: rgb(0, 128, 255);\n"
-"selection-color: rgb(128, 255, 0);\n"
-"border-color: rgb(102, 102, 255);\n"
-"font: 14pt \"Courier\";")
+									"selection-color: rgb(128, 255, 0);\n"
+									"border-color: rgb(102, 102, 255);\n"
+									"font: 14pt \"Courier\";")
 		self.menuMenu.setObjectName("menuMenu")
 		self.menuCtrl = QtWidgets.QMenu(self.menubar)
 		self.menuCtrl.setObjectName("menuCtrl")
