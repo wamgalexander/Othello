@@ -51,7 +51,7 @@ class Ui_MainWindow(object):
 		if(self.placed[int(grid.objectName())]):
 			return
 
-		if self.playerColor:
+		if self.playerColor == constants.WHITE:
 			grid.setIcon(QtGui.QIcon("./src/white.png"))
 			grid.setText("")
 			self.placed[int(grid.objectName())] = constants.WHITE
@@ -59,7 +59,7 @@ class Ui_MainWindow(object):
 			grid.setIcon(QtGui.QIcon("./src/black.png"))
 			grid.setText("")
 			self.placed[int(grid.objectName())] = constants.BLACK
-		self.playerColor =  0 if self.playerColor else 1
+		self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
 
 	def hideAllGrids(self):
 		for i in range(0, 64):
