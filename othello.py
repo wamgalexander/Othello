@@ -1,6 +1,7 @@
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QObject, pyqtSignal
+import constants
 
 class QRightClickButton(QtWidgets.QPushButton):
 	def __init__(self, parent):
@@ -11,8 +12,10 @@ class QRightClickButton(QtWidgets.QPushButton):
 
 class Ui_MainWindow(object):
 
-	# 0 for black ; 1 for white
-	playerColor = 0;
+	# declare variable
+	playerColor = 0 # 0 for black ; 1 for white
+	state = constants.MAIN
+	zoomInIndex = -1
 
 	# on click event
 	def eventFilter(self, obj, event):
@@ -28,9 +31,54 @@ class Ui_MainWindow(object):
 	def placeChess(self, grid):
 		if self.playerColor:
 			grid.setIcon(QtGui.QIcon("./src/white.png"))
+			grid.setText("")
 		else:
 			grid.setIcon(QtGui.QIcon("./src/black.png"))
+			grid.setText("")
 		self.playerColor =  0 if self.playerColor else 1
+
+	def hideAllGrids(self):
+		for i in range(0, 64):
+			self.grid[i].setVisible(False)
+
+	# zoom out
+	def zoomOut(self, grid):
+		if(self.state == constants.ZOOM_IN1):
+			self.hideAllGrids()
+			for y in range(0, 8):
+				for x in range(0, 8):
+					self.grid[x + y * 8].setGeometry(QtCore.QRect(10 + x * 70, 10 + y * 70, 65, 65))
+					self.grid[x + y * 8].setVisible(True)
+			self.state = constants.MAIN
+		elif(self.state == constants.ZOOM_IN2):
+			self.hideAllGrids()
+			number = constants.ZOOM_IN1_TABLE[self.zoomInIndex]
+			self.zoomInIndex = number
+			for y in range(0, 4):
+				for x in range(0, 4):
+					self.grid[number + x + y * 8].setGeometry(QtCore.QRect(10 + x * 70 * 2, 10 + y * 70 * 2, 65 * 2, 65 * 2))
+					self.grid[number + x + y * 8].setVisible(True)
+			self.state = constants.ZOOM_IN1
+
+	# zoom in
+	def zoomIn(self, grid):
+		index = int(grid.objectName())
+		if(self.state == constants.MAIN):
+			self.zoomInIndex = constants.ZOOM_IN1_TABLE[index]
+			self.hideAllGrids()
+			for y in range(0, 4):
+				for x in range(0, 4):
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(10 + x * 70 * 2, 10 + y * 70 * 2, 65 * 2, 65 * 2))
+					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
+			self.state = constants.ZOOM_IN1
+		elif(self.state == constants.ZOOM_IN1):
+			self.zoomInIndex = constants.ZOOM_IN2_TABLE[index]
+			self.hideAllGrids()
+			for y in range(0, 2):
+				for x in range(0, 2):
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(10 + x * 70 * 4, 10 + y * 70 * 4, 65 * 4, 65 * 4))
+					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
+			self.state = constants.ZOOM_IN2
 
 	# left click
 	def gridOnClick(self):
@@ -38,11 +86,12 @@ class Ui_MainWindow(object):
 
 	# right click
 	def gridOnRightClick(self):
-		print("right clicked button " + str(self.sender().objectName()))
+		self.zoomIn(self.sender())
 
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
-		MainWindow.resize(640, 640)
+		MainWindow.resize(800, 640)
+		MainWindow.setMinimumSize(QtCore.QSize(800, 640))
 		MainWindow.setAutoFillBackground(False)
 		MainWindow.setStyleSheet("background-color: rgb(76, 76, 76);")
 		self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -55,8 +104,8 @@ class Ui_MainWindow(object):
 				self.grid.append(QRightClickButton(self.centralwidget))
 				self.grid[x + y * 8].setGeometry(QtCore.QRect(10 + x * 70, 10 + y * 70, 65, 65))
 				self.grid[x + y * 8].setStyleSheet("border-color: rgb(255, 255, 255);\n"
-		"background-color: rgb(19, 146, 59);")
-				self.grid[x + y * 8].setText("")
+												   "background-color: rgb(19, 146, 59);")
+				self.grid[x + y * 8].setText(str(x + y * 8 + 1))
 				self.grid[x + y * 8].setAutoDefault(False)
 				self.grid[x + y * 8].setObjectName(str(x + y * 8))
 				self.grid[x + y * 8].setIconSize(QtCore.QSize(55, 55))
@@ -66,6 +115,15 @@ class Ui_MainWindow(object):
 				self.grid[x + y * 8].installEventFilter(self)
 				#  connect right click event with gridOnRightClick
 				self.grid[x + y * 8].rightClicked.connect(self.gridOnRightClick)
+		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
+		self.grid[64].setEnabled(True)
+		self.grid[64].setGeometry(QtCore.QRect(610, 210, 160, 160))
+		self.grid[64].setStyleSheet("border-color: rgb(255, 255, 255);\n"
+									"background-color: rgb(19, 146, 59);")
+		self.grid[64].setText("")
+		self.grid[64].setAutoDefault(False)
+		self.grid[64].setObjectName("64")
+		self.grid[64].clicked.connect(self.zoomOut)
 
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.menubar = QtWidgets.QMenuBar(MainWindow)
