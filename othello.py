@@ -1,11 +1,3 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'othello.ui'
-#
-# Created by: PyQt5 UI code generator 5.5.1
-#
-# WARNING! All changes made in this file will be lost!
-
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QObject, pyqtSignal
@@ -19,6 +11,9 @@ class QRightClickButton(QtWidgets.QPushButton):
 
 class Ui_MainWindow(object):
 
+	# 0 for black ; 1 for white
+	playerColor = 0;
+
 	# on click event
 	def eventFilter(self, obj, event):
 		if event.type() in (QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonDblClick):
@@ -29,13 +24,21 @@ class Ui_MainWindow(object):
 				return False
 		return False
 
+	# places chess
+	def placeChess(self, grid):
+		if self.playerColor:
+			grid.setIcon(QtGui.QIcon("./src/white.png"))
+		else:
+			grid.setIcon(QtGui.QIcon("./src/black.png"))
+		self.playerColor =  0 if self.playerColor else 1
+
 	# left click
 	def gridOnClick(self):
-		self.sender().setIcon(QtGui.QIcon("./src/black.png"))
+		self.placeChess(self.sender())
 
 	# right click
 	def gridOnRightClick(self):
-		self.sender().setIcon(QtGui.QIcon("./src/white.png"))
+		print("right clicked button " + str(self.sender().objectName()))
 
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
