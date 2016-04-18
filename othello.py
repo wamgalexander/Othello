@@ -84,6 +84,22 @@ class Ui_MainWindow(object):
 			for x in range(0, length):
 				self.grid[index + y + x * 8].setVisible(False if self.grid[index + y + x * 8].isVisible() else True)
 
+	def gridColor(self, block):
+		index = []
+		length = None
+		if(self.state == constants.MAIN):
+			index = constants.MAIN_BLOCK[block]
+			length = constants.MAIN_BLOCK_LENGTH
+		elif(self.state == constants.ZOOM_IN1):
+			index = self.zoomInIndex + constants.ZOOM_IN1_BLOCK[block]
+			length = constants.ZOOM_IN1_BLOCK_LENGTH
+		else:
+			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
+			length = constants.ZOOM_IN2_BLOCK_LENGTH
+		for y in range(0, length):
+			for x in range(0, length):
+				self.grid[index + y + x * 8].setStyleSheet("background-color: " + constants.COLOR[block] + ";")
+
 	# initialize
 	def init(self):
 		self.playerColor = constants.BLACK
@@ -149,6 +165,8 @@ class Ui_MainWindow(object):
 					self.grid[number + x + y * 8].setGeometry(QtCore.QRect(10 + x * 70 * 2, 10 + y * 70 * 2, 65 * 2, 65 * 2))
 					self.grid[number + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN1
+		for i in range(0, 4):
+			self.gridColor(i)
 
 	# zoom in
 	def zoomIn(self, grid):
@@ -169,6 +187,8 @@ class Ui_MainWindow(object):
 					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(10 + x * 70 * 4, 10 + y * 70 * 4, 65 * 4, 65 * 4))
 					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN2
+		for i in range(0, 4):
+			self.gridColor(i)
 
 	# left click
 	def gridOnClick(self):
@@ -198,7 +218,7 @@ class Ui_MainWindow(object):
 				self.grid.append(QRightClickButton(self.centralwidget))
 				self.grid[x + y * 8].setGeometry(QtCore.QRect(10 + x * 70, 10 + y * 70, 65, 65))
 				self.grid[x + y * 8].setStyleSheet("border-color: rgb(255, 255, 255);\n"
-												   "background-color: rgb(19, 146, 59);")
+												   "background-color: " + constants.COLOR[int(x / 4) + int(y / 4) * 2] + ";")
 				self.grid[x + y * 8].setText(str(x + y * 8 + 1))
 				self.grid[x + y * 8].setAutoDefault(False)
 				self.grid[x + y * 8].setObjectName(str(x + y * 8))
