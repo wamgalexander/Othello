@@ -346,3 +346,7 @@ class Ui_MainWindow(object):
 		self.actionUpper_Right_ON.setText(_translate("MainWindow", "Upper-Right:ON"))
 		self.actionLower_Left_ON.setText(_translate("MainWindow", "Lower-Left:ON"))
 		self.actionLower_Right_ON.setText(_translate("MainWindow", "Lower-Right:ON"))
+		self.actionNew_Game.setShortcut(_translate("MainWindow", "Ctrl+N"))
+		self.actionReturn.setShortcut(_translate("MainWindow", "Ctrl+R"))
+		self.actionWhole_Board_ON.setShortcut(_translate("MainWindow", "Ctrl+E"))
+		self.actionWhole_Board_OFF.setShortcut(_translate("MainWindow", "Ctrl+D"))

@@ -1395,7 +1395,7 @@ background-color: rgb(19, 146, 59);</string>
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>38</height>
+     <height>48</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -1417,18 +1417,18 @@ font-color: rgb(255, 255, 255);
 font: 14pt &quot;Courier&quot;;</string>
     </property>
     <property name="title">
-     <string>Game</string>
+     <string>&amp;Game</string>
     </property>
     <addaction name="actionNew_Game"/>
     <addaction name="actionReturn"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>Settings</string>
+     <string>Se&amp;ttings</string>
     </property>
     <widget class="QMenu" name="menuBlink">
      <property name="title">
-      <string>Blink</string>
+      <string>&amp;Blink</string>
      </property>
      <addaction name="actionWhole_Board_ON"/>
      <addaction name="actionWhole_Board_OFF"/>
@@ -1445,42 +1445,54 @@ font: 14pt &quot;Courier&quot;;</string>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionNew_Game">
    <property name="text">
-    <string>New Game</string>
+    <string>&amp;New Game</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+N</string>
    </property>
   </action>
   <action name="actionReturn">
    <property name="text">
-    <string>Return</string>
+    <string>&amp;Return</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
    </property>
   </action>
   <action name="actionWhole_Board_ON">
    <property name="text">
-    <string>Whole Board ON</string>
+    <string>&amp;Whole Board ON</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
   <action name="actionUpper_Left_ON">
    <property name="text">
-    <string>Upper-Left:ON</string>
+    <string>&amp;Upper-Left:ON</string>
    </property>
   </action>
   <action name="actionUpper_Right_ON">
    <property name="text">
-    <string>Upper-Right:ON</string>
+    <string>Upper-&amp;Right:ON</string>
    </property>
   </action>
   <action name="actionLower_Left_ON">
    <property name="text">
-    <string>Lower-Left:ON</string>
+    <string>&amp;Lower-Left:ON</string>
    </property>
   </action>
   <action name="actionLower_Right_ON">
    <property name="text">
-    <string>Lower-Right:ON</string>
+    <string>Lower-Right:&amp;ON</string>
    </property>
   </action>
   <action name="actionWhole_Board_OFF">
    <property name="text">
-    <string>Whole Board OFF</string>
+    <string>Whole &amp;Board OFF</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
    </property>
   </action>
  </widget>
