@@ -1417,18 +1417,72 @@ font-color: rgb(255, 255, 255);
 font: 14pt &quot;Courier&quot;;</string>
     </property>
     <property name="title">
-     <string>o&amp;pt</string>
+     <string>Game</string>
     </property>
+    <addaction name="actionNew_Game"/>
+    <addaction name="actionReturn"/>
    </widget>
-   <widget class="QMenu" name="menuCtrl">
+   <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>&amp;ctrl</string>
+     <string>Settings</string>
     </property>
+    <widget class="QMenu" name="menuBlink">
+     <property name="title">
+      <string>Blink</string>
+     </property>
+     <addaction name="actionWhole_Board_ON"/>
+     <addaction name="actionWhole_Board_OFF"/>
+     <addaction name="actionUpper_Left_ON"/>
+     <addaction name="actionUpper_Right_ON"/>
+     <addaction name="actionLower_Left_ON"/>
+     <addaction name="actionLower_Right_ON"/>
+    </widget>
+    <addaction name="menuBlink"/>
    </widget>
    <addaction name="menuMenu"/>
-   <addaction name="menuCtrl"/>
+   <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionNew_Game">
+   <property name="text">
+    <string>New Game</string>
+   </property>
+  </action>
+  <action name="actionReturn">
+   <property name="text">
+    <string>Return</string>
+   </property>
+  </action>
+  <action name="actionWhole_Board_ON">
+   <property name="text">
+    <string>Whole Board ON</string>
+   </property>
+  </action>
+  <action name="actionUpper_Left_ON">
+   <property name="text">
+    <string>Upper-Left:ON</string>
+   </property>
+  </action>
+  <action name="actionUpper_Right_ON">
+   <property name="text">
+    <string>Upper-Right:ON</string>
+   </property>
+  </action>
+  <action name="actionLower_Left_ON">
+   <property name="text">
+    <string>Lower-Left:ON</string>
+   </property>
+  </action>
+  <action name="actionLower_Right_ON">
+   <property name="text">
+    <string>Lower-Right:ON</string>
+   </property>
+  </action>
+  <action name="actionWhole_Board_OFF">
+   <property name="text">
+    <string>Whole Board OFF</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>

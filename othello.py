@@ -21,10 +21,67 @@ class Ui_MainWindow(object):
 	zoomInIndex = -1
 	placed = [constants.EMPTY] * 64
 	timer = []
+	grid = []
 
-	def blink(self, index):
-		for y in range(0, 4):
-			for x in range(0, 4):
+	def blinkControl(self, block, allSwitch = False, switch = False):
+		if(not allSwitch):
+			if(self.timer[block].isActive()):
+				self.timer[block].stop()
+				self.showBlockGrid(block)
+			else:
+				self.timer[block].start(constants.ONE_SEC/constants.FREQ[block])
+		else:
+			if(switch == constants.ON):
+				for i in range(0, 4):
+					if(not self.timer[i].isActive()):
+						self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
+			else:
+				for i in range(0, 4):
+					self.timer[i].stop()
+					self.showBlockGrid(i)
+		self.menuBlinkControl()
+
+	def menuBlinkControl(self):
+		self.actionUpper_Left_ON.setText(QtCore.QCoreApplication.translate("MainWindow", \
+																		   "Upper-Left:"  + ("ON" if self.timer[constants.UPPER_LEFT].isActive() else "OFF")))
+		self.actionUpper_Right_ON.setText(QtCore.QCoreApplication.translate("MainWindow", \
+																		   "Upper-Right:" + ("ON" if self.timer[constants.UPPER_RIGHT].isActive() else "OFF")))
+		self.actionLower_Left_ON.setText(QtCore.QCoreApplication.translate("MainWindow", \
+																		   "Lower-Left:" + ("ON" if self.timer[constants.LOWER_LEFT].isActive() else "OFF")))
+		self.actionLower_Right_ON.setText(QtCore.QCoreApplication.translate("MainWindow", \
+																		   "Lower-Right:" + ("ON" if self.timer[constants.LOWER_RIGHT].isActive() else "OFF")))
+
+
+	def showBlockGrid(self, block):
+		index = []
+		length = None
+		if(self.state == constants.MAIN):
+			index = constants.MAIN_BLOCK[block]
+			length = constants.MAIN_BLOCK_LENGTH
+		elif(self.state == constants.ZOOM_IN1):
+			index = self.zoomInIndex + constants.ZOOM_IN1_BLOCK[block]
+			length = constants.ZOOM_IN1_BLOCK_LENGTH
+		else:
+			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
+			length = constants.ZOOM_IN2_BLOCK_LENGTH
+		for y in range(0, length):
+			for x in range(0, length):
+				self.grid[index + y + x * 8].setVisible(True)
+
+	def blink(self, block):
+		index = []
+		length = None
+		if(self.state == constants.MAIN):
+			index = constants.MAIN_BLOCK[block]
+			length = constants.MAIN_BLOCK_LENGTH
+		elif(self.state == constants.ZOOM_IN1):
+			index = self.zoomInIndex + constants.ZOOM_IN1_BLOCK[block]
+			length = constants.ZOOM_IN1_BLOCK_LENGTH
+		else:
+			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
+			length = constants.ZOOM_IN2_BLOCK_LENGTH
+		for y in range(0, length):
+			for x in range(0, length):
 				self.grid[index + y + x * 8].setVisible(False if self.grid[index + y + x * 8].isVisible() else True)
 
 	# initialize
@@ -57,7 +114,7 @@ class Ui_MainWindow(object):
 
 	# places chess
 	def placeChess(self, grid):
-		if(self.placed[int(grid.objectName())]):
+		if(self.placed[int(grid.objectName())] != constants.EMPTY):
 			return
 
 		if self.playerColor == constants.WHITE:
@@ -131,11 +188,11 @@ class Ui_MainWindow(object):
 		self.centralwidget.setAutoFillBackground(False)
 		self.centralwidget.setObjectName("centralwidget")
 
-		self.grid = []
-
+		# create QTimer for blinking
 		for i in range(0, 4):
 			self.timer.append(QTimer())
 
+		# board
 		for y in range(0, 8):
 			for x in range(0, 8):
 				self.grid.append(QRightClickButton(self.centralwidget))
@@ -181,7 +238,7 @@ class Ui_MainWindow(object):
 
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.menubar = QtWidgets.QMenuBar(MainWindow)
-		self.menubar.setGeometry(QtCore.QRect(0, 0, 575, 48))
+		self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 38))
 		self.menubar.setStyleSheet("background-color: rgb(0, 128, 255);\n"
 								   "selection-color: rgb(128, 255, 0);\n"
 								   "border-color: rgb(102, 102, 255);\n"
@@ -194,23 +251,63 @@ class Ui_MainWindow(object):
 									"border-color: rgb(102, 102, 255);\n"
 									"font: 14pt \"Courier\";")
 		self.menuMenu.setObjectName("menuMenu")
-		self.menuCtrl = QtWidgets.QMenu(self.menubar)
-		self.menuCtrl.setObjectName("menuCtrl")
+		self.menuSettings = QtWidgets.QMenu(self.menubar)
+		self.menuSettings.setObjectName("menuSettings")
+		self.menuBlink = QtWidgets.QMenu(self.menuSettings)
+		self.menuBlink.setObjectName("menuBlink")
 		MainWindow.setMenuBar(self.menubar)
 		self.statusbar = QtWidgets.QStatusBar(MainWindow)
 		self.statusbar.setObjectName("statusbar")
 		MainWindow.setStatusBar(self.statusbar)
+		self.actionNew_Game = QtWidgets.QAction(MainWindow)
+		self.actionNew_Game.setObjectName("actionNew_Game")
+		self.actionNew_Game.triggered.connect(self.restart)
+		self.actionReturn = QtWidgets.QAction(MainWindow)
+		self.actionReturn.setObjectName("actionReturn")
+		self.actionReturn.triggered.connect(self.zoomOut)
+
+
+
+		self.actionWhole_Board_ON = QtWidgets.QAction(MainWindow)
+		self.actionWhole_Board_ON.setObjectName("actionWhole_Board_ON")
+		self.actionWhole_Board_ON.triggered.connect(functools.partial(self.blinkControl, 4, True, constants.ON))
+		self.actionWhole_Board_OFF = QtWidgets.QAction(MainWindow)
+		self.actionWhole_Board_OFF.setObjectName("actionWhole_Board_OFF")
+		self.actionWhole_Board_OFF.triggered.connect(functools.partial(self.blinkControl, 4, True, constants.OFF))
+		self.actionUpper_Left_ON = QtWidgets.QAction(MainWindow)
+		self.actionUpper_Left_ON.setObjectName("actionUpper_Left_ON")
+		self.actionUpper_Left_ON.triggered.connect(functools.partial(self.blinkControl, constants.UPPER_LEFT, False))
+		self.actionUpper_Right_ON = QtWidgets.QAction(MainWindow)
+		self.actionUpper_Right_ON.setObjectName("actionUpper_Right_ON")
+		self.actionUpper_Right_ON.triggered.connect(functools.partial(self.blinkControl, constants.UPPER_RIGHT, False))
+		self.actionLower_Left_ON = QtWidgets.QAction(MainWindow)
+		self.actionLower_Left_ON.setObjectName("action_Lower_Left_ON")
+		self.actionLower_Left_ON.triggered.connect(functools.partial(self.blinkControl, constants.LOWER_LEFT, False))
+		self.actionLower_Right_ON = QtWidgets.QAction(MainWindow)
+		self.actionLower_Right_ON.setObjectName("actionLower_Right_ON")
+		self.actionLower_Right_ON.triggered.connect(functools.partial(self.blinkControl, constants.LOWER_RIGHT, False))
+		self.menuMenu.addAction(self.actionNew_Game)
+		self.menuMenu.addAction(self.actionReturn)
+		self.menuBlink.addAction(self.actionWhole_Board_ON)
+		self.menuBlink.addAction(self.actionWhole_Board_OFF)
+		self.menuBlink.addAction(self.actionUpper_Left_ON)
+		self.menuBlink.addAction(self.actionUpper_Right_ON)
+		self.menuBlink.addAction(self.actionLower_Left_ON)
+		self.menuBlink.addAction(self.actionLower_Right_ON)
+		self.menuSettings.addAction(self.menuBlink.menuAction())
 		self.menubar.addAction(self.menuMenu.menuAction())
-		self.menubar.addAction(self.menuCtrl.menuAction())
+		self.menubar.addAction(self.menuSettings.menuAction())
 
 		self.retranslateUi(MainWindow)
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
-		self.timer[0].timeout.connect(functools.partial(self.blink, index=0))
-		self.timer[1].timeout.connect(functools.partial(self.blink, index=4))
-		self.timer[2].timeout.connect(functools.partial(self.blink, index=32))
-		self.timer[3].timeout.connect(functools.partial(self.blink, index=36))
+		# connect QTimer
+		self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
+		self.timer[1].timeout.connect(functools.partial(self.blink, block=constants.UPPER_RIGHT))
+		self.timer[2].timeout.connect(functools.partial(self.blink, block=constants.LOWER_LEFT))
+		self.timer[3].timeout.connect(functools.partial(self.blink, block=constants.LOWER_RIGHT))
 
+		# start QTimer (start to blink)
 		for i in range(0, 4):
 			self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
 
@@ -218,5 +315,14 @@ class Ui_MainWindow(object):
 	def retranslateUi(self, MainWindow):
 		_translate = QtCore.QCoreApplication.translate
 		MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-		self.menuMenu.setTitle(_translate("MainWindow", "o&pt"))
-		self.menuCtrl.setTitle(_translate("MainWindow", "&ctrl"))
+		self.menuMenu.setTitle(_translate("MainWindow", "Game"))
+		self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
+		self.menuBlink.setTitle(_translate("MainWindow", "Blink"))
+		self.actionNew_Game.setText(_translate("MainWindow", "New Game"))
+		self.actionReturn.setText(_translate("MainWindow", "Return"))
+		self.actionWhole_Board_ON.setText(_translate("MainWindow", "Whole Board ON"))
+		self.actionWhole_Board_OFF.setText(_translate("MainWindow", "Whole Board OFF"))
+		self.actionUpper_Left_ON.setText(_translate("MainWindow", "Upper-Left:ON"))
+		self.actionUpper_Right_ON.setText(_translate("MainWindow", "Upper-Right:ON"))
+		self.actionLower_Left_ON.setText(_translate("MainWindow", "Lower-Left:ON"))
+		self.actionLower_Right_ON.setText(_translate("MainWindow", "Lower-Right:ON"))
