@@ -244,6 +244,7 @@ class Ui_MainWindow(object):
 				self.grid[index].installEventFilter(self)
 				#  connect right click event with gridOnRightClick
 				self.grid[index].rightClicked.connect(self.gridOnRightClick)
+				self.grid[index].setFocusPolicy(QtCore.Qt.NoFocus)
 
 		# refresh button
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
@@ -257,6 +258,7 @@ class Ui_MainWindow(object):
 		self.grid[64].setAutoDefault(False)
 		self.grid[64].setObjectName("refresh")
 		self.grid[64].clicked.connect(self.restart)
+		self.grid[64].setFocusPolicy(QtCore.Qt.NoFocus)
 
 		# return button
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
@@ -270,6 +272,7 @@ class Ui_MainWindow(object):
 		self.grid[65].setAutoDefault(False)
 		self.grid[65].setObjectName("return")
 		self.grid[65].clicked.connect(self.zoomOut)
+		self.grid[65].setFocusPolicy(QtCore.Qt.NoFocus)
 
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.menubar = QtWidgets.QMenuBar(MainWindow)
