@@ -153,7 +153,9 @@ class Ui_MainWindow(object):
 			self.hideAllGrids()
 			for y in range(0, 8):
 				for x in range(0, 8):
-					self.grid[x + y * 8].setGeometry(QtCore.QRect(10 + x * 70, 10 + y * 70, 65, 65))
+					xPosition = 10 + x * 70 + (constants.SPACE if int(x / 4) else 0)
+					yPosition = 10 + y * 70 + (constants.SPACE if int(y / 4) else 0)
+					self.grid[x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65, 65))
 					self.grid[x + y * 8].setVisible(True)
 			self.state = constants.MAIN
 		elif(self.state == constants.ZOOM_IN2):
@@ -162,7 +164,9 @@ class Ui_MainWindow(object):
 			self.zoomInIndex = number
 			for y in range(0, 4):
 				for x in range(0, 4):
-					self.grid[number + x + y * 8].setGeometry(QtCore.QRect(10 + x * 70 * 2, 10 + y * 70 * 2, 65 * 2, 65 * 2))
+					xPosition = 10 + x * 70 * 2 + (constants.SPACE if int(x / 2) else 0)
+					yPosition = 10 + y * 70 * 2 + (constants.SPACE if int(y / 2) else 0)
+					self.grid[number + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65 * 2, 65 * 2))
 					self.grid[number + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN1
 		for i in range(0, 4):
@@ -176,7 +180,9 @@ class Ui_MainWindow(object):
 			self.hideAllGrids()
 			for y in range(0, 4):
 				for x in range(0, 4):
-					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(10 + x * 70 * 2, 10 + y * 70 * 2, 65 * 2, 65 * 2))
+					xPosition = 10 + x * 70 * 2 + (constants.SPACE if int(x / 2) else 0)
+					yPosition = 10 + y * 70 * 2 + (constants.SPACE if int(y / 2) else 0)
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65 * 2, 65 * 2))
 					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN1
 		elif(self.state == constants.ZOOM_IN1):
@@ -184,7 +190,9 @@ class Ui_MainWindow(object):
 			self.hideAllGrids()
 			for y in range(0, 2):
 				for x in range(0, 2):
-					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(10 + x * 70 * 4, 10 + y * 70 * 4, 65 * 4, 65 * 4))
+					xPosition = 10 + x * 70 * 4 + (constants.SPACE if x else 0)
+					yPosition = 10 + y * 70 * 4 + (constants.SPACE if y else 0)
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65 * 4, 65 * 4))
 					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN2
 		for i in range(0, 4):
@@ -200,8 +208,8 @@ class Ui_MainWindow(object):
 
 	def setupUi(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
-		MainWindow.resize(800, 640)
-		MainWindow.setMinimumSize(QtCore.QSize(800, 640))
+		MainWindow.resize(800 + constants.SPACE, 640 + constants.SPACE)
+		MainWindow.setMinimumSize(QtCore.QSize(800 + constants.SPACE, 640 + constants.SPACE))
 		MainWindow.setAutoFillBackground(False)
 		MainWindow.setStyleSheet("background-color: rgb(76, 76, 76);")
 		self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -215,25 +223,28 @@ class Ui_MainWindow(object):
 		# board
 		for y in range(0, 8):
 			for x in range(0, 8):
+				index = x + y * 8
 				self.grid.append(QRightClickButton(self.centralwidget))
-				self.grid[x + y * 8].setGeometry(QtCore.QRect(10 + x * 70, 10 + y * 70, 65, 65))
-				self.grid[x + y * 8].setStyleSheet("border-color: rgb(255, 255, 255);\n"
+				xPosition = 10 + x * 70 + (constants.SPACE if int(x / 4) else 0)
+				yPosition = 10 + y * 70 + (constants.SPACE if int(y / 4) else 0)
+				self.grid[index].setGeometry(QtCore.QRect(xPosition, yPosition, 65, 65))
+				self.grid[index].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 												   "background-color: " + constants.COLOR[int(x / 4) + int(y / 4) * 2] + ";")
-				self.grid[x + y * 8].setText(str(x + y * 8 + 1))
-				self.grid[x + y * 8].setAutoDefault(False)
-				self.grid[x + y * 8].setObjectName(str(x + y * 8))
-				self.grid[x + y * 8].setIconSize(QtCore.QSize(55, 55))
+				self.grid[index].setText(str(index + 1))
+				self.grid[index].setAutoDefault(False)
+				self.grid[index].setObjectName(str(index))
+				self.grid[index].setIconSize(QtCore.QSize(55, 55))
 				#  connect click event with gridOnClick
-				self.grid[x + y * 8].clicked.connect(self.gridOnClick)
+				self.grid[index].clicked.connect(self.gridOnClick)
 				#  creat event filter
-				self.grid[x + y * 8].installEventFilter(self)
+				self.grid[index].installEventFilter(self)
 				#  connect right click event with gridOnRightClick
-				self.grid[x + y * 8].rightClicked.connect(self.gridOnRightClick)
+				self.grid[index].rightClicked.connect(self.gridOnRightClick)
 
 		# refresh button
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[64].setEnabled(True)
-		self.grid[64].setGeometry(QtCore.QRect(610, 70, 160, 160))
+		self.grid[64].setGeometry(QtCore.QRect(610 + constants.SPACE, 70, 160, 160))
 		self.grid[64].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 									"background-color: rgb(19, 146, 59);")
 		self.grid[64].setIcon(QtGui.QIcon("./src/refresh.png"))
@@ -246,7 +257,7 @@ class Ui_MainWindow(object):
 		# return button
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[65].setEnabled(True)
-		self.grid[65].setGeometry(QtCore.QRect(610, 280, 160, 160))
+		self.grid[65].setGeometry(QtCore.QRect(610 + constants.SPACE, 280 + constants.SPACE, 160, 160))
 		self.grid[65].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 									"background-color: rgb(19, 146, 59);")
 		self.grid[65].setIcon(QtGui.QIcon("./src/return.png"))
