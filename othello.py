@@ -350,3 +350,7 @@ class Ui_MainWindow(object):
 		self.actionReturn.setShortcut(_translate("MainWindow", "Ctrl+R"))
 		self.actionWhole_Board_ON.setShortcut(_translate("MainWindow", "Ctrl+E"))
 		self.actionWhole_Board_OFF.setShortcut(_translate("MainWindow", "Ctrl+D"))
+		self.actionUpper_Left_ON.setShortcut(_translate("MainWindow", "Ctrl+1"))
+		self.actionUpper_Right_ON.setShortcut(_translate("MainWindow", "Ctrl+2"))
+		self.actionLower_Left_ON.setShortcut(_translate("MainWindow", "Ctrl+3"))
+		self.actionLower_Right_ON.setShortcut(_translate("MainWindow", "Ctrl+4"))
