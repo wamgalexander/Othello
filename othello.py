@@ -98,7 +98,9 @@ class Ui_MainWindow(object):
 			length = constants.ZOOM_IN2_BLOCK_LENGTH
 		for y in range(0, length):
 			for x in range(0, length):
-				self.grid[index + y + x * 8].setStyleSheet("background-color: " + constants.COLOR[block] + ";")
+				self.grid[index + y + x * 8].setStyleSheet("background-color: " + constants.COLOR[block] + ";"
+															"font: 550 40pt \"Helvetica\";\n"
+															"color: white;\n")
 
 	# initialize
 	def init(self):
@@ -229,7 +231,9 @@ class Ui_MainWindow(object):
 				yPosition = 10 + y * 70 + (constants.YSPACE if int(y / 4) else 0)
 				self.grid[index].setGeometry(QtCore.QRect(xPosition, yPosition, 65, 65))
 				self.grid[index].setStyleSheet("border-color: rgb(255, 255, 255);\n"
-												   "background-color: " + constants.COLOR[int(x / 4) + int(y / 4) * 2] + ";")
+												"font: 550 40pt \"Helvetica\";\n"
+												"color: white;\n"
+												"background-color: " + constants.COLOR[int(x / 4) + int(y / 4) * 2] + ";")
 				self.grid[index].setText(str(index + 1))
 				self.grid[index].setAutoDefault(False)
 				self.grid[index].setObjectName(str(index))
