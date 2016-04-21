@@ -1392,6 +1392,19 @@ background-color: rgb(19, 146, 59);</string>
      <bool>false</bool>
     </property>
    </widget>
+   <widget class="QTextEdit" name="textEdit">
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>460</y>
+      <width>104</width>
+      <height>78</height>
+     </rect>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::TextEditorInteraction</set>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

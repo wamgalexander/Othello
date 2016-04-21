@@ -21,7 +21,23 @@ class Ui_MainWindow(object):
 	zoomInIndex = -1
 	placed = [constants.EMPTY] * 64
 	timer = []
+	text = []
 	grid = []
+	setting = False
+
+	def editFreq(self):
+		for i in range(0, 4):
+			constants.FREQ[i] = int(self.text[i].toPlainText())
+			if(self.timer[i].isActive()):
+				self.timer[i].stop()
+			if(constants.FREQ[i] > 0):
+				self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
+
+	def showFreqControl(self, MainWindow, block, freq):
+		self.setting = not self.setting
+		self.grid[66].setVisible(self.setting)
+		for i in range(0, 4):
+			self.text[i].setVisible(self.setting)
 
 	def blinkControl(self, block, allSwitch = False, switch = False):
 		if(not allSwitch):
@@ -263,7 +279,7 @@ class Ui_MainWindow(object):
 		# return button
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[65].setEnabled(True)
-		self.grid[65].setGeometry(QtCore.QRect(610 + constants.XSPACE, 280 + constants.YSPACE, 160, 160))
+		self.grid[65].setGeometry(QtCore.QRect(610 + constants.XSPACE, 250 + constants.YSPACE, 160, 160))
 		self.grid[65].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 									"background-color: rgb(19, 146, 59);")
 		self.grid[65].setIcon(QtGui.QIcon("./src/return.png"))
@@ -273,6 +289,34 @@ class Ui_MainWindow(object):
 		self.grid[65].setObjectName("return")
 		self.grid[65].clicked.connect(self.zoomOut)
 		self.grid[65].setFocusPolicy(QtCore.Qt.NoFocus)
+
+		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
+		self.grid[66].setEnabled(True)
+		self.grid[66].setGeometry(QtCore.QRect(610 + constants.XSPACE, 470, 90, 35))
+		self.grid[66].setText(str(constants.FREQ[0]))
+		self.grid[66].setObjectName("set")
+		self.grid[66].setText("Set")
+		self.grid[66].setStyleSheet("background-color: rgb(0, 128, 255);\n"
+								   "selection-color: rgb(128, 255, 0);\n"
+								   "border-color: rgb(102, 102, 255);\n"
+								   "font: 14pt \"Courier\";")
+		self.grid[66].clicked.connect(self.editFreq)
+		self.grid[66].setAutoDefault(False)
+		self.grid[66].setFocusPolicy(QtCore.Qt.NoFocus)
+		self.grid[66].setVisible(False)
+
+		for i in range(0, 4):
+			self.text.append(QtWidgets.QTextEdit(self.centralwidget))
+			self.text[i].setEnabled(True)
+			self.text[i].setGeometry(QtCore.QRect(610 + (i%2) * 50 + constants.XSPACE, 480 + int(i/2) * 50 + constants.YSPACE, 40, 40))
+			self.text[i].setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
+			self.text[i].setObjectName(str(i))
+			self.text[i].setText(str(constants.FREQ[i]))
+			self.text[i].setStyleSheet("background-color: " + constants.COLOR[i] +";\n"
+									   "border-color: rgb(102, 102, 255);\n"
+									   "font: 14pt \"Courier\";")
+			self.text[i].setVisible(False)
+
 
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -299,12 +343,14 @@ class Ui_MainWindow(object):
 		self.statusbar = QtWidgets.QStatusBar(MainWindow)
 		self.statusbar.setObjectName("statusbar")
 		MainWindow.setStatusBar(self.statusbar)
+
 		self.actionNew_Game = QtWidgets.QAction(MainWindow)
 		self.actionNew_Game.setObjectName("actionNew_Game")
 		self.actionNew_Game.triggered.connect(self.restart)
 		self.actionReturn = QtWidgets.QAction(MainWindow)
 		self.actionReturn.setObjectName("actionReturn")
 		self.actionReturn.triggered.connect(self.zoomOut)
+
 		self.actionWhole_Board_ON = QtWidgets.QAction(MainWindow)
 		self.actionWhole_Board_ON.setObjectName("actionWhole_Board_ON")
 		self.actionWhole_Board_ON.triggered.connect(functools.partial(self.blinkControl, 4, True, constants.ON))
@@ -323,6 +369,12 @@ class Ui_MainWindow(object):
 		self.actionLower_Right_ON = QtWidgets.QAction(MainWindow)
 		self.actionLower_Right_ON.setObjectName("actionLower_Right_ON")
 		self.actionLower_Right_ON.triggered.connect(functools.partial(self.blinkControl, constants.LOWER_RIGHT, False))
+
+		self.setFreq = QtWidgets.QAction(MainWindow)
+		self.setFreq.setObjectName("set_Frequence")
+		self.setFreq.triggered.connect(functools.partial(self.showFreqControl, MainWindow, 1, 5))
+
+
 		self.menuMenu.addAction(self.actionNew_Game)
 		self.menuMenu.addAction(self.actionReturn)
 		self.menuBlink.addAction(self.actionWhole_Board_ON)
@@ -331,6 +383,8 @@ class Ui_MainWindow(object):
 		self.menuBlink.addAction(self.actionUpper_Right_ON)
 		self.menuBlink.addAction(self.actionLower_Left_ON)
 		self.menuBlink.addAction(self.actionLower_Right_ON)
+		self.menuBlink.addAction(self.setFreq)
+
 		self.menuSettings.addAction(self.menuBlink.menuAction())
 		self.menubar.addAction(self.menuMenu.menuAction())
 		self.menubar.addAction(self.menuSettings.menuAction())
@@ -359,15 +413,21 @@ class Ui_MainWindow(object):
 		self.actionReturn.setText(_translate("MainWindow", "Return"))
 		self.actionWhole_Board_ON.setText(_translate("MainWindow", "Whole Board ON"))
 		self.actionWhole_Board_OFF.setText(_translate("MainWindow", "Whole Board OFF"))
+
 		self.actionUpper_Left_ON.setText(_translate("MainWindow", "Upper-Left:ON"))
 		self.actionUpper_Right_ON.setText(_translate("MainWindow", "Upper-Right:ON"))
 		self.actionLower_Left_ON.setText(_translate("MainWindow", "Lower-Left:ON"))
 		self.actionLower_Right_ON.setText(_translate("MainWindow", "Lower-Right:ON"))
+		self.setFreq.setText(_translate("MainWindow", "Set-Frequence:ON"))
+
 		self.actionNew_Game.setShortcut(_translate("MainWindow", "Ctrl+N"))
 		self.actionReturn.setShortcut(_translate("MainWindow", "Ctrl+R"))
+
 		self.actionWhole_Board_ON.setShortcut(_translate("MainWindow", "Ctrl+E"))
 		self.actionWhole_Board_OFF.setShortcut(_translate("MainWindow", "Ctrl+D"))
+
 		self.actionUpper_Left_ON.setShortcut(_translate("MainWindow", "Ctrl+1"))
 		self.actionUpper_Right_ON.setShortcut(_translate("MainWindow", "Ctrl+2"))
 		self.actionLower_Left_ON.setShortcut(_translate("MainWindow", "Ctrl+3"))
 		self.actionLower_Right_ON.setShortcut(_translate("MainWindow", "Ctrl+4"))
+		self.setFreq.setShortcut(_translate("MainWindow", "Ctrl+F"))
