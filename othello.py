@@ -1,5 +1,5 @@
 from PyQt5 import Qt, QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication
+from PyQt5.QtWidgets import QApplication, QWidget, QDesktopWidget
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 import functools
 
@@ -22,6 +22,13 @@ class Ui_MainWindow(object):
 	placed = [constants.EMPTY] * 64
 	timer = []
 	grid = []
+
+	def center(self):
+
+		window = self.frameGeometry()
+		center = QDesktopWidget().availableGeometry().center()
+		window.moveCenter(center)
+		self.move(window.topLeft())
 
 	def blinkControl(self, block, allSwitch = False, switch = False):
 		if(not allSwitch):
@@ -217,6 +224,7 @@ class Ui_MainWindow(object):
 		self.centralwidget = QtWidgets.QWidget(MainWindow)
 		self.centralwidget.setAutoFillBackground(False)
 		self.centralwidget.setObjectName("centralwidget")
+		self.center()
 
 		# create QTimer for blinking
 		for i in range(0, 4):
