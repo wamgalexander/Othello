@@ -24,6 +24,7 @@ class Ui_MainWindow(object):
 	text = []
 	grid = []
 	setting = False
+	blinkShelter = []
 
 	def editFreq(self):
 		for i in range(0, 4):
@@ -76,36 +77,10 @@ class Ui_MainWindow(object):
 
 
 	def showBlockGrid(self, block):
-		index = []
-		length = None
-		if(self.state == constants.MAIN):
-			index = constants.MAIN_BLOCK[block]
-			length = constants.MAIN_BLOCK_LENGTH
-		elif(self.state == constants.ZOOM_IN1):
-			index = self.zoomInIndex + constants.ZOOM_IN1_BLOCK[block]
-			length = constants.ZOOM_IN1_BLOCK_LENGTH
-		else:
-			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
-			length = constants.ZOOM_IN2_BLOCK_LENGTH
-		for y in range(0, length):
-			for x in range(0, length):
-				self.grid[index + y + x * 8].setVisible(True)
+		self.blinkShelter[block].setVisible(False)
 
 	def blink(self, block):
-		index = []
-		length = None
-		if(self.state == constants.MAIN):
-			index = constants.MAIN_BLOCK[block]
-			length = constants.MAIN_BLOCK_LENGTH
-		elif(self.state == constants.ZOOM_IN1):
-			index = self.zoomInIndex + constants.ZOOM_IN1_BLOCK[block]
-			length = constants.ZOOM_IN1_BLOCK_LENGTH
-		else:
-			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
-			length = constants.ZOOM_IN2_BLOCK_LENGTH
-		for y in range(0, length):
-			for x in range(0, length):
-				self.grid[index + y + x * 8].setVisible(False if self.grid[index + y + x * 8].isVisible() else True)
+		self.blinkShelter[block].setVisible(False if self.blinkShelter[block].isVisible() else True)
 
 	def gridColor(self, block):
 		index = []
@@ -124,7 +99,6 @@ class Ui_MainWindow(object):
 				self.grid[index + y + x * 8].setStyleSheet("background-color: " + constants.COLOR[block] + ";"
 															"font: 550 40pt \"Helvetica\";\n"
 															"color: white;\n")
-
 	# initialize
 	def init(self):
 		self.playerColor = constants.BLACK
@@ -399,6 +373,14 @@ class Ui_MainWindow(object):
 
 		self.retranslateUi(MainWindow)
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+		# add shelter for blinking
+		for i in range(0, 4):
+			self.blinkShelter.append(QtWidgets.QWidget(self.centralwidget))
+			self.blinkShelter[i].setObjectName("shelter" + str(i))
+			xPosition = 10 + ((constants.BLOCK_SIZE + constants.XSPACE + 5) if (i % 2) else 0)
+			yPosition = 10 + ((constants.BLOCK_SIZE + constants.YSPACE + 5) if (i > 1) else 0)
+			self.blinkShelter[i].setGeometry(QtCore.QRect(xPosition, yPosition, 65 * 4 + 5 * 3, 65 * 4 + 5 * 3))
 
 		# connect QTimer
 		self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
