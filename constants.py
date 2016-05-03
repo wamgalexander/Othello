@@ -45,7 +45,8 @@ ON = 1
 
 COLOR = ["rgb(255, 91, 42)", "rgb(152, 236, 104)", "rgb(255, 141, 255)", "rgb(143, 243, 255)"]
 
-XSPACE = 40
-YSPACE = 40
+XSPACE = 40.0
+YSPACE = 40.0
 
-BLOCK_SIZE = 275 #65 * 4 + 5 * 3
+BLOCK_WIDTH = 275 #60 * 4 + 5 * 3
+BLOCK_HEIGHT = 275 # 60 * 4 + 5 * 3

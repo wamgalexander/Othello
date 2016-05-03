@@ -15,10 +15,10 @@ class ExampleApp(QtWidgets.QMainWindow, othello.Ui_MainWindow):
                             # It sets up layout and widgets that are defined
 
 def main():
-    app = QtWidgets.QApplication(sys.argv)  # A new instance of QApplication
-    form = ExampleApp()                 # We set the form to be our ExampleApp (design)
-    form.show()                         # Show the form
-    app.exec_()                         # and execute the app
+	app = QtWidgets.QApplication(sys.argv)  # A new instance of QApplication
+	form = ExampleApp()                 # We set the form to be our ExampleApp (design)
+	form.show()                         # Show the form
+	app.exec_()                         # and execute the app
 
 
 
