@@ -2,6 +2,7 @@ from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QDesktopWidget
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 import functools
+import random
 
 import constants
 
@@ -24,6 +25,7 @@ class Ui_MainWindow(object):
 	text = []
 	grid = []
 	setting = False
+	lastBlink = [-1] * 4
 
 	def editFreq(self):
 		for i in range(0, 4):
@@ -103,9 +105,18 @@ class Ui_MainWindow(object):
 		else:
 			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
 			length = constants.ZOOM_IN2_BLOCK_LENGTH
-		for y in range(0, length):
-			for x in range(0, length):
-				self.grid[index + y + x * 8].setVisible(False if self.grid[index + y + x * 8].isVisible() else True)
+		randomX = random.randint(0, length-1)
+		randomY = random.randint(0, length-1)
+		randomNum = randomY + randomX * 8
+		while randomNum == self.lastBlink[block]:
+			randomX = random.randint(0, length-1)
+			randomY = random.randint(0, length-1)
+			randomNum = randomY + randomX * 8
+		if (not self.lastBlink[block] == -1) and (not self.grid[index + self.lastBlink[block]].isVisible()):
+			self.grid[index + self.lastBlink[block]].setVisible(True)
+		else:
+			self.grid[index + randomNum].setVisible(False)
+		self.lastBlink[block] = randomNum
 
 	def gridColor(self, block):
 		index = []
