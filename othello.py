@@ -15,13 +15,13 @@ class QRightClickButton(QtWidgets.QPushButton):
 	rightClicked = pyqtSignal()
 
 class Ui_MainWindow(object):
-
 	# declare variable
 	playerColor = constants.BLACK
 	state = constants.MAIN
 	zoomInIndex = -1
 	placed = [constants.EMPTY] * 64
 	timer = []
+	cross = [] * 4
 	text = []
 	grid = []
 	setting = False
@@ -76,7 +76,22 @@ class Ui_MainWindow(object):
 		self.actionLower_Right_ON.setText(QtCore.QCoreApplication.translate("MainWindow", \
 																		   "Lower-Right:" + ("ON" if self.timer[constants.LOWER_RIGHT].isActive() else "OFF")))
 
-
+	def showSetCross(self, block):
+		index = []
+		length = None
+		if(self.state == constants.MAIN):
+			index = constants.MAIN_BLOCK[block]
+			length = constants.MAIN_BLOCK_LENGTH
+		elif(self.state == constants.ZOOM_IN1):
+			index = self.zoomInIndex + constants.ZOOM_IN1_BLOCK[block]
+			length = constants.ZOOM_IN1_BLOCK_LENGTH
+		else:
+			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
+			length = constants.ZOOM_IN2_BLOCK_LENGTH
+		for y in range(0, length):
+			for x in range(0, length):
+				self.grid[index + y + x * 8].setVisible(True)
+				
 	def showBlockGrid(self, block):
 		index = []
 		length = None
