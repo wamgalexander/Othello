@@ -26,6 +26,18 @@ class Ui_MainWindow(object):
 	grid = []
 	setting = False
 	lastBlink = [-1] * 4
+	screenWidth = 0
+	screenHeight = 0
+	startPosX = 0
+	startPosY = 0
+	buttonWidth = 0
+	buttonHeight = 0
+	spaceWidth = 0
+	spaceHeight = 0
+	resetButtonWidth = 0
+	resetButtonHeight = 0
+	returnButtonWidth = 0
+	returnButtonHeight = 0
 
 	def editFreq(self):
 		for i in range(0, 4):
@@ -42,7 +54,6 @@ class Ui_MainWindow(object):
 			self.text[i].setVisible(self.setting)
 
 	def center(self):
-
 		window = self.frameGeometry()
 		center = QDesktopWidget().availableGeometry().center()
 		window.moveCenter(center)
@@ -189,9 +200,9 @@ class Ui_MainWindow(object):
 			self.hideAllGrids()
 			for y in range(0, 8):
 				for x in range(0, 8):
-					xPosition = 10 + x * 70 + (constants.XSPACE if int(x / 4) else 0)
-					yPosition = 10 + y * 70 + (constants.YSPACE if int(y / 4) else 0)
-					self.grid[x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65, 65))
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) + (constants.XSPACE if int(x / 4) else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) + (constants.YSPACE if int(y / 4) else 0)
+					self.grid[x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth, self.buttonHeight))
 					self.grid[x + y * 8].setVisible(True)
 			self.state = constants.MAIN
 		elif(self.state == constants.ZOOM_IN2):
@@ -216,9 +227,9 @@ class Ui_MainWindow(object):
 			self.hideAllGrids()
 			for y in range(0, 4):
 				for x in range(0, 4):
-					xPosition = 10 + x * 70 * 2 + (constants.XSPACE if int(x / 2) else 0)
-					yPosition = 10 + y * 70 * 2 + (constants.YSPACE if int(y / 2) else 0)
-					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65 * 2, 65 * 2))
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) * 2 + (constants.XSPACE if int(x / 2) else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) * 2 + (constants.YSPACE if int(y / 2) else 0)
+					self.grid[number + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 2, self.buttonHeight * 2))
 					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN1
 		elif(self.state == constants.ZOOM_IN1):
@@ -226,9 +237,9 @@ class Ui_MainWindow(object):
 			self.hideAllGrids()
 			for y in range(0, 2):
 				for x in range(0, 2):
-					xPosition = 10 + x * 70 * 4 + (constants.XSPACE if x else 0)
-					yPosition = 10 + y * 70 * 4 + (constants.YSPACE if y else 0)
-					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65 * 4, 65 * 4))
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) * 4 + (constants.XSPACE if x else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) * 4 + (constants.YSPACE if y else 0)
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 4, self.buttonHeight * 4))
 					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN2
 		for i in range(0, 4):
@@ -243,9 +254,24 @@ class Ui_MainWindow(object):
 		self.zoomIn(self.sender())
 
 	def setupUi(self, MainWindow):
+		r = QtWidgets.QDesktopWidget().screenGeometry()
+		constants.XSPACE = r.width() * (40/840)
+		constants.YSPACE = r.height() * (40/680)
+		self.screenWidth = r.width()
+		self.screenHeight = r.height()
+		self.spaceWidth = self.screenWidth * (6/840)
+		self.spaceHeight = self.screenHeight * (8/680)
+		self.buttonWidth = self.screenWidth * (50/840)
+		self.buttonHeight = self.screenHeight * (60/680)
+		self.resetButtonWidth = self.screenWidth * (110/840)
+		self.resetButtonHeight = self.screenHeight * (130/680)
+		self.returnButtonWidth = self.screenWidth * (110/840)
+		self.returnButtonHeight = self.screenHeight * (130/680)
+		self.startPosX = self.screenWidth * (1/7)
+		self.startPosY = self.screenHeight * (15/680)
 		MainWindow.setObjectName("MainWindow")
-		MainWindow.resize(800 + constants.XSPACE, 640 + constants.YSPACE)
-		MainWindow.setMinimumSize(QtCore.QSize(800 + constants.XSPACE, 640 + constants.YSPACE))
+		MainWindow.resize(self.screenWidth, self.screenHeight)
+		MainWindow.setMinimumSize(QtCore.QSize(self.screenWidth, self.screenHeight))
 		MainWindow.setAutoFillBackground(False)
 		MainWindow.setStyleSheet("background-color: rgb(0, 0, 0);")
 		self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -262,9 +288,9 @@ class Ui_MainWindow(object):
 			for x in range(0, 8):
 				index = x + y * 8
 				self.grid.append(QRightClickButton(self.centralwidget))
-				xPosition = 10 + x * 70 + (constants.XSPACE if int(x / 4) else 0)
-				yPosition = 10 + y * 70 + (constants.YSPACE if int(y / 4) else 0)
-				self.grid[index].setGeometry(QtCore.QRect(xPosition, yPosition, 65, 65))
+				xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) + (constants.XSPACE if int(x / 4) else 0)
+				yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) + (constants.YSPACE if int(y / 4) else 0)
+				self.grid[index].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth, self.buttonHeight))
 				self.grid[index].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 												"font: 550 40pt \"Helvetica\";\n"
 												"color: white;\n"
@@ -284,7 +310,7 @@ class Ui_MainWindow(object):
 		# refresh button
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[64].setEnabled(True)
-		self.grid[64].setGeometry(QtCore.QRect(610 + constants.XSPACE, 70, 160, 160))
+		self.grid[64].setGeometry(QtCore.QRect(self.screenWidth*(670/840)+constants.XSPACE, self.screenHeight*(70/680) + constants.YSPACE, self.resetButtonWidth, self.resetButtonHeight))
 		self.grid[64].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 									"background-color: rgb(19, 146, 59);")
 		self.grid[64].setIcon(QtGui.QIcon("./src/refresh.png"))
@@ -298,7 +324,7 @@ class Ui_MainWindow(object):
 		# return button
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[65].setEnabled(True)
-		self.grid[65].setGeometry(QtCore.QRect(610 + constants.XSPACE, 250 + constants.YSPACE, 160, 160))
+		self.grid[65].setGeometry(QtCore.QRect(self.screenWidth*(670/840)+constants.XSPACE, self.screenHeight*(250/680) + constants.YSPACE, self.returnButtonWidth, self.returnButtonHeight))
 		self.grid[65].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 									"background-color: rgb(19, 146, 59);")
 		self.grid[65].setIcon(QtGui.QIcon("./src/return.png"))
@@ -311,7 +337,7 @@ class Ui_MainWindow(object):
 
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[66].setEnabled(True)
-		self.grid[66].setGeometry(QtCore.QRect(610 + constants.XSPACE, 470, 90, 35))
+		self.grid[66].setGeometry(QtCore.QRect(self.screenWidth*(670/840)+constants.XSPACE, self.screenHeight*(470/680), self.screenWidth*(90/840), self.screenHeight*(35/680)))
 		self.grid[66].setText(str(constants.FREQ[0]))
 		self.grid[66].setObjectName("set")
 		self.grid[66].setText("Set")
@@ -327,7 +353,7 @@ class Ui_MainWindow(object):
 		for i in range(0, 4):
 			self.text.append(QtWidgets.QTextEdit(self.centralwidget))
 			self.text[i].setEnabled(True)
-			self.text[i].setGeometry(QtCore.QRect(610 + (i%2) * 50 + constants.XSPACE, 480 + int(i/2) * 50 + constants.YSPACE, 40, 40))
+			self.text[i].setGeometry(QtCore.QRect(self.screenWidth*(670/840) + (i%2) * self.screenWidth*(50/840) + constants.XSPACE, self.screenHeight*(480/680) + int(i/2) * self.screenHeight*(50/680) + constants.YSPACE, self.screenWidth*(40/840), self.screenHeight*(40/680)))
 			self.text[i].setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
 			self.text[i].setObjectName(str(i))
 			self.text[i].setText(str(constants.FREQ[i]))
