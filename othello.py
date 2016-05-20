@@ -5,7 +5,6 @@ import functools
 
 import constants
 
-
 class QRightClickButton(QtWidgets.QPushButton):
 	def __init__(self, parent):
 		QtWidgets.QPushButton.__init__(self, parent)
@@ -14,37 +13,58 @@ class QRightClickButton(QtWidgets.QPushButton):
 	rightClicked = pyqtSignal()
 
 class Ui_MainWindow(object):
-
-	# declare variable
+####### declare variable #######
 	playerColor = constants.BLACK
 	state = constants.MAIN
-	zoomInIndex = -1
+	zoomInIndex = 0
+	setting = False
+
 	placed = [constants.EMPTY] * 64
 	timer = []
 	text = []
 	grid = []
-	setting = False
+	blinkShelter = []
 
-	def editFreq(self):
-		for i in range(0, 4):
-			constants.FREQ[i] = int(self.text[i].toPlainText())
-			if(self.timer[i].isActive()):
-				self.timer[i].stop()
-			if(constants.FREQ[i] > 0):
-				self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
+	screenWidth = 0
+	screenHeight = 0
+	startPosX = 0
+	startPosY = 0
+	buttonWidth = 0
+	buttonHeight = 0
+	spaceWidth = 0
+	spaceHeight = 0
+	resetButtonWidth = 0
+	resetButtonHeight = 0
+	returnButtonWidth = 0
+	returnButtonHeight = 0
 
-	def showFreqControl(self, MainWindow, block, freq):
-		self.setting = not self.setting
-		self.grid[66].setVisible(self.setting)
-		for i in range(0, 4):
-			self.text[i].setVisible(self.setting)
+####### UI ########
+	def setupUi(self, MainWindow):
+		# set layout variable
+		self.layoutSizeVar()
+		# main window
+		self.setMainWindow(MainWindow)
+		# board
+		self.setBoard()
+		# refresh button
+		self.setRefreshButton()
+		# return button
+		self.setReturnButton()
+		# freq ctrl
+		self.setFreqCtrl()
+		# menubar
+		self.setMenubar(MainWindow)
+		# menu
+		self.setMenu(MainWindow)
+		# Shelter
+		self.setShelter()
+		# timer
+		self.setTimer()
 
-	def center(self):
-
-		window = self.frameGeometry()
-		center = QDesktopWidget().availableGeometry().center()
-		window.moveCenter(center)
-		self.move(window.topLeft())
+####### Fuction #######
+## blink ##
+	def blink(self, block):
+		self.blinkShelter[block].setVisible(False if self.blinkShelter[block].isVisible() else True)
 
 	def blinkControl(self, block, allSwitch = False, switch = False):
 		if(not allSwitch):
@@ -74,38 +94,9 @@ class Ui_MainWindow(object):
 		self.actionLower_Right_ON.setText(QtCore.QCoreApplication.translate("MainWindow", \
 																		   "Lower-Right:" + ("ON" if self.timer[constants.LOWER_RIGHT].isActive() else "OFF")))
 
-
+## Block ##
 	def showBlockGrid(self, block):
-		index = []
-		length = None
-		if(self.state == constants.MAIN):
-			index = constants.MAIN_BLOCK[block]
-			length = constants.MAIN_BLOCK_LENGTH
-		elif(self.state == constants.ZOOM_IN1):
-			index = self.zoomInIndex + constants.ZOOM_IN1_BLOCK[block]
-			length = constants.ZOOM_IN1_BLOCK_LENGTH
-		else:
-			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
-			length = constants.ZOOM_IN2_BLOCK_LENGTH
-		for y in range(0, length):
-			for x in range(0, length):
-				self.grid[index + y + x * 8].setVisible(True)
-
-	def blink(self, block):
-		index = []
-		length = None
-		if(self.state == constants.MAIN):
-			index = constants.MAIN_BLOCK[block]
-			length = constants.MAIN_BLOCK_LENGTH
-		elif(self.state == constants.ZOOM_IN1):
-			index = self.zoomInIndex + constants.ZOOM_IN1_BLOCK[block]
-			length = constants.ZOOM_IN1_BLOCK_LENGTH
-		else:
-			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
-			length = constants.ZOOM_IN2_BLOCK_LENGTH
-		for y in range(0, length):
-			for x in range(0, length):
-				self.grid[index + y + x * 8].setVisible(False if self.grid[index + y + x * 8].isVisible() else True)
+		self.blinkShelter[block].setVisible(False)
 
 	def gridColor(self, block):
 		index = []
@@ -125,14 +116,59 @@ class Ui_MainWindow(object):
 															"font: 550 40pt \"Helvetica\";\n"
 															"color: white;\n")
 
-	# initialize
-	def init(self):
-		self.playerColor = constants.BLACK
-		self.state = constants.MAIN
-		self.zoomInIndex = -1
-		for i in range (0, 64):
-			self.placed[i] = constants.EMPTY
+## Zoom ##
+	# zoom out
+	def zoomOut(self):
+		if(self.state == constants.ZOOM_IN1):
+			self.hideAllGrids()
+			for y in range(0, 8):
+				for x in range(0, 8):
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) + (constants.XSPACE if int(x / 4) else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) + (constants.YSPACE if int(y / 4) else 0)
+					self.grid[x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth, self.buttonHeight))
+					self.grid[x + y * 8].setVisible(True)
+			self.state = constants.MAIN
+		elif(self.state == constants.ZOOM_IN2):
+			self.hideAllGrids()
+			number = constants.ZOOM_IN1_TABLE[self.zoomInIndex]
+			self.zoomInIndex = number
+			for y in range(0, 4):
+				for x in range(0, 4):
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) * 2 + (constants.XSPACE if int(x / 2) else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) * 2 + (constants.YSPACE if int(y / 2) else 0)
+					self.grid[number + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 2, self.buttonHeight * 2))
+					self.grid[number + x + y * 8].setVisible(True)
+			self.state = constants.ZOOM_IN1
+		for i in range(0, 4):
+			self.gridColor(i)
 
+	# zoom in
+	def zoomIn(self, grid):
+		index = int(grid.objectName())
+		if(self.state == constants.MAIN):
+			self.zoomInIndex = constants.ZOOM_IN1_TABLE[index]
+			self.hideAllGrids()
+			for y in range(0, 4):
+				for x in range(0, 4):
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) * 2 + (constants.XSPACE if int(x / 2) else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) * 2 + (constants.YSPACE if int(y / 2) else 0)
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 2, self.buttonHeight * 2))
+					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
+			self.state = constants.ZOOM_IN1
+		elif(self.state == constants.ZOOM_IN1):
+			self.zoomInIndex = constants.ZOOM_IN2_TABLE[index]
+			self.hideAllGrids()
+			for y in range(0, 2):
+				for x in range(0, 2):
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) * 4 + (constants.XSPACE if x else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) * 4 + (constants.YSPACE if y else 0)
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 4, self.buttonHeight * 4))
+					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
+			self.state = constants.ZOOM_IN2
+			
+		for i in range(0, 4):
+			self.gridColor(i)
+## Click ##
 	# on click event
 	def eventFilter(self, obj, event):
 		if event.type() in (QtCore.QEvent.MouseButtonPress, QtCore.QEvent.MouseButtonDblClick):
@@ -143,6 +179,23 @@ class Ui_MainWindow(object):
 				return False
 		return False
 
+	# left click
+	def gridOnClick(self):
+		self.placeChess(self.sender())
+
+	# right click
+	def gridOnRightClick(self):
+		self.zoomIn(self.sender())
+
+## action ##
+	# initialize
+	def init(self):
+		self.playerColor = constants.BLACK
+		self.state = constants.MAIN
+		self.zoomInIndex = 0
+		for i in range (0, 64):
+			self.placed[i] = constants.EMPTY
+
 	# restart
 	def restart(self):
 		for i in range(0, 64):
@@ -151,7 +204,6 @@ class Ui_MainWindow(object):
 		while self.state != constants.MAIN:
 			self.zoomOut()
 		self.init()
-
 
 	# places chess
 	def placeChess(self, grid):
@@ -172,69 +224,86 @@ class Ui_MainWindow(object):
 		for i in range(0, 64):
 			self.grid[i].setVisible(False)
 
-	# zoom out
-	def zoomOut(self):
-		if(self.state == constants.ZOOM_IN1):
-			self.hideAllGrids()
-			for y in range(0, 8):
-				for x in range(0, 8):
-					xPosition = 10 + x * 70 + (constants.XSPACE if int(x / 4) else 0)
-					yPosition = 10 + y * 70 + (constants.YSPACE if int(y / 4) else 0)
-					self.grid[x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65, 65))
-					self.grid[x + y * 8].setVisible(True)
-			self.state = constants.MAIN
-		elif(self.state == constants.ZOOM_IN2):
-			self.hideAllGrids()
-			number = constants.ZOOM_IN1_TABLE[self.zoomInIndex]
-			self.zoomInIndex = number
-			for y in range(0, 4):
-				for x in range(0, 4):
-					xPosition = 10 + x * 70 * 2 + (constants.XSPACE if int(x / 2) else 0)
-					yPosition = 10 + y * 70 * 2 + (constants.YSPACE if int(y / 2) else 0)
-					self.grid[number + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65 * 2, 65 * 2))
-					self.grid[number + x + y * 8].setVisible(True)
-			self.state = constants.ZOOM_IN1
+## freq ##
+	def editFreq(self):
 		for i in range(0, 4):
-			self.gridColor(i)
+			constants.FREQ[i] = int(self.text[i].toPlainText())
+			if(self.timer[i].isActive()):
+				self.timer[i].stop()
+			if(constants.FREQ[i] > 0):
+				self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
 
-	# zoom in
-	def zoomIn(self, grid):
-		index = int(grid.objectName())
-		if(self.state == constants.MAIN):
-			self.zoomInIndex = constants.ZOOM_IN1_TABLE[index]
-			self.hideAllGrids()
-			for y in range(0, 4):
-				for x in range(0, 4):
-					xPosition = 10 + x * 70 * 2 + (constants.XSPACE if int(x / 2) else 0)
-					yPosition = 10 + y * 70 * 2 + (constants.YSPACE if int(y / 2) else 0)
-					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65 * 2, 65 * 2))
-					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
-			self.state = constants.ZOOM_IN1
-		elif(self.state == constants.ZOOM_IN1):
-			self.zoomInIndex = constants.ZOOM_IN2_TABLE[index]
-			self.hideAllGrids()
-			for y in range(0, 2):
-				for x in range(0, 2):
-					xPosition = 10 + x * 70 * 4 + (constants.XSPACE if x else 0)
-					yPosition = 10 + y * 70 * 4 + (constants.YSPACE if y else 0)
-					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, 65 * 4, 65 * 4))
-					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
-			self.state = constants.ZOOM_IN2
+	def showFreqControl(self, MainWindow):
+		self.setting = not self.setting
+		self.grid[66].setVisible(self.setting)
 		for i in range(0, 4):
-			self.gridColor(i)
+			self.text[i].setVisible(self.setting)
 
-	# left click
-	def gridOnClick(self):
-		self.placeChess(self.sender())
+## Key ##
+	# short-key setting
+	def retranslateUi(self, MainWindow):
+		_translate = QtCore.QCoreApplication.translate
+		MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+		self.menuMenu.setTitle(_translate("MainWindow", "Game"))
+		self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
+		self.menuBlink.setTitle(_translate("MainWindow", "Blink"))
+		self.actionNew_Game.setText(_translate("MainWindow", "New Game"))
+		self.actionReturn.setText(_translate("MainWindow", "Return"))
+		self.actionWhole_Board_ON.setText(_translate("MainWindow", "Whole Board ON"))
+		self.actionWhole_Board_OFF.setText(_translate("MainWindow", "Whole Board OFF"))
 
-	# right click
-	def gridOnRightClick(self):
-		self.zoomIn(self.sender())
+		self.actionUpper_Left_ON.setText(_translate("MainWindow", "Upper-Left:ON"))
+		self.actionUpper_Right_ON.setText(_translate("MainWindow", "Upper-Right:ON"))
+		self.actionLower_Left_ON.setText(_translate("MainWindow", "Lower-Left:ON"))
+		self.actionLower_Right_ON.setText(_translate("MainWindow", "Lower-Right:ON"))
+		self.setFreq.setText(_translate("MainWindow", "Set-Freq"))
 
-	def setupUi(self, MainWindow):
+		self.actionNew_Game.setShortcut(_translate("MainWindow", "Ctrl+N"))
+		self.actionReturn.setShortcut(_translate("MainWindow", "Ctrl+R"))
+
+		self.actionWhole_Board_ON.setShortcut(_translate("MainWindow", "Ctrl+E"))
+		self.actionWhole_Board_OFF.setShortcut(_translate("MainWindow", "Ctrl+D"))
+
+		self.actionUpper_Left_ON.setShortcut(_translate("MainWindow", "Ctrl+1"))
+		self.actionUpper_Right_ON.setShortcut(_translate("MainWindow", "Ctrl+2"))
+		self.actionLower_Left_ON.setShortcut(_translate("MainWindow", "Ctrl+3"))
+		self.actionLower_Right_ON.setShortcut(_translate("MainWindow", "Ctrl+4"))
+		self.setFreq.setShortcut(_translate("MainWindow", "Ctrl+F"))
+
+## UI setting ##
+	def layoutSizeVar(self):
+		# creat timer
+		for i in range(0, 4):
+			self.timer.append(QTimer())
+
+		r = QtWidgets.QDesktopWidget().screenGeometry()
+		constants.XSPACE = r.width() * (40/840)
+		constants.YSPACE = r.height() * (40/680)
+		self.screenWidth = r.width()
+		self.screenHeight = r.height()
+		self.spaceWidth = self.screenWidth * (6/840)
+		self.spaceHeight = self.screenHeight * (8/680)
+		self.buttonWidth = self.screenWidth * (50/840)
+		self.buttonHeight = self.screenHeight * (60/680)
+		self.resetButtonWidth = self.screenWidth * (110/840)
+		self.resetButtonHeight = self.screenHeight * (130/680)
+		self.returnButtonWidth = self.screenWidth * (110/840)
+		self.returnButtonHeight = self.screenHeight * (130/680)
+		self.boardWidth = self.screenWidth * (670/840)
+		self.boardHeight = self.screenHeight
+		self.startPosX = self.screenWidth * (1/7)
+		self.startPosY = self.screenHeight * (15/680)
+
+	def center(self):
+		window = self.frameGeometry()
+		center = QDesktopWidget().availableGeometry().center()
+		window.moveCenter(center)
+		self.move(window.topLeft())
+
+	def setMainWindow(self, MainWindow):
 		MainWindow.setObjectName("MainWindow")
-		MainWindow.resize(800 + constants.XSPACE, 640 + constants.YSPACE)
-		MainWindow.setMinimumSize(QtCore.QSize(800 + constants.XSPACE, 640 + constants.YSPACE))
+		MainWindow.resize(self.screenWidth, self.screenHeight)
+		MainWindow.setMinimumSize(QtCore.QSize(self.screenWidth, self.screenHeight))
 		MainWindow.setAutoFillBackground(False)
 		MainWindow.setStyleSheet("background-color: rgb(0, 0, 0);")
 		self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -242,22 +311,18 @@ class Ui_MainWindow(object):
 		self.centralwidget.setObjectName("centralwidget")
 		self.center()
 
-		# create QTimer for blinking
-		for i in range(0, 4):
-			self.timer.append(QTimer())
-
-		# board
+	def setBoard(self):
 		for y in range(0, 8):
 			for x in range(0, 8):
 				index = x + y * 8
 				self.grid.append(QRightClickButton(self.centralwidget))
-				xPosition = 10 + x * 70 + (constants.XSPACE if int(x / 4) else 0)
-				yPosition = 10 + y * 70 + (constants.YSPACE if int(y / 4) else 0)
-				self.grid[index].setGeometry(QtCore.QRect(xPosition, yPosition, 65, 65))
-				self.grid[index].setStyleSheet("border-color: rgb(255, 255, 255);\n"
-												"font: 550 40pt \"Helvetica\";\n"
-												"color: white;\n"
-												"background-color: " + constants.COLOR[int(x / 4) + int(y / 4) * 2] + ";")
+				xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) + (constants.XSPACE if int(x / 4) else 0)
+				yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) + (constants.YSPACE if int(y / 4) else 0)
+				self.grid[index].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth, self.buttonHeight))
+				self.grid[index].setStyleSheet("border-color: rgb(255, 255, 255);"
+												"font: 550 40pt \"Helvetica\";"
+												"color: white;"
+												"background-color:"+ constants.COLOR[int(x / 4) + int(y / 4) * 2] +";")
 				self.grid[index].setText(str(index + 1))
 				self.grid[index].setAutoDefault(False)
 				self.grid[index].setObjectName(str(index))
@@ -270,10 +335,10 @@ class Ui_MainWindow(object):
 				self.grid[index].rightClicked.connect(self.gridOnRightClick)
 				self.grid[index].setFocusPolicy(QtCore.Qt.NoFocus)
 
-		# refresh button
+	def setRefreshButton(self):
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[64].setEnabled(True)
-		self.grid[64].setGeometry(QtCore.QRect(610 + constants.XSPACE, 70, 160, 160))
+		self.grid[64].setGeometry(QtCore.QRect(self.screenWidth*(670/840)+constants.XSPACE, self.screenHeight*(70/680) + constants.YSPACE, self.resetButtonWidth, self.resetButtonHeight))
 		self.grid[64].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 									"background-color: rgb(19, 146, 59);")
 		self.grid[64].setIcon(QtGui.QIcon("./src/refresh.png"))
@@ -284,10 +349,10 @@ class Ui_MainWindow(object):
 		self.grid[64].clicked.connect(self.restart)
 		self.grid[64].setFocusPolicy(QtCore.Qt.NoFocus)
 
-		# return button
+	def setReturnButton(self):
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[65].setEnabled(True)
-		self.grid[65].setGeometry(QtCore.QRect(610 + constants.XSPACE, 250 + constants.YSPACE, 160, 160))
+		self.grid[65].setGeometry(QtCore.QRect(self.screenWidth*(670/840)+constants.XSPACE, self.screenHeight*(250/680) + constants.YSPACE, self.returnButtonWidth, self.returnButtonHeight))
 		self.grid[65].setStyleSheet("border-color: rgb(255, 255, 255);\n"
 									"background-color: rgb(19, 146, 59);")
 		self.grid[65].setIcon(QtGui.QIcon("./src/return.png"))
@@ -298,25 +363,28 @@ class Ui_MainWindow(object):
 		self.grid[65].clicked.connect(self.zoomOut)
 		self.grid[65].setFocusPolicy(QtCore.Qt.NoFocus)
 
+	def setFreqCtrl(self):
+		# freq set button
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[66].setEnabled(True)
-		self.grid[66].setGeometry(QtCore.QRect(610 + constants.XSPACE, 470, 90, 35))
+		self.grid[66].setGeometry(QtCore.QRect(self.screenWidth*(670/840)+constants.XSPACE, self.screenHeight*(470/680), self.screenWidth*(90/840), self.screenHeight*(35/680)))
 		self.grid[66].setText(str(constants.FREQ[0]))
 		self.grid[66].setObjectName("set")
 		self.grid[66].setText("Set")
-		self.grid[66].setStyleSheet("background-color: rgb(0, 128, 255);\n"
-								   "selection-color: rgb(128, 255, 0);\n"
-								   "border-color: rgb(102, 102, 255);\n"
+		self.grid[66].setStyleSheet("background-color: rgb(0, 128, 255);"
+								   "selection-color: rgb(128, 255, 0);"
+								   "border-color: rgb(102, 102, 255);"
 								   "font: 14pt \"Courier\";")
 		self.grid[66].clicked.connect(self.editFreq)
 		self.grid[66].setAutoDefault(False)
 		self.grid[66].setFocusPolicy(QtCore.Qt.NoFocus)
 		self.grid[66].setVisible(False)
 
+		# freq ctrl
 		for i in range(0, 4):
 			self.text.append(QtWidgets.QTextEdit(self.centralwidget))
 			self.text[i].setEnabled(True)
-			self.text[i].setGeometry(QtCore.QRect(610 + (i%2) * 50 + constants.XSPACE, 480 + int(i/2) * 50 + constants.YSPACE, 40, 40))
+			self.text[i].setGeometry(QtCore.QRect(self.screenWidth*(670/840) + (i%2) * self.screenWidth*(50/840) + constants.XSPACE, self.screenHeight*(480/680) + int(i/2) * self.screenHeight*(50/680) + constants.YSPACE, self.screenWidth*(40/840), self.screenHeight*(40/680)))
 			self.text[i].setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
 			self.text[i].setObjectName(str(i))
 			self.text[i].setText(str(constants.FREQ[i]))
@@ -325,7 +393,7 @@ class Ui_MainWindow(object):
 									   "font: 14pt \"Courier\";")
 			self.text[i].setVisible(False)
 
-
+	def setMenubar(self, MainWindow):
 		MainWindow.setCentralWidget(self.centralwidget)
 		self.menubar = QtWidgets.QMenuBar(MainWindow)
 		self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 38))
@@ -341,7 +409,7 @@ class Ui_MainWindow(object):
 									"border-color: rgb(102, 102, 255);\n"
 									"font: 14pt \"Courier\";")
 
-		# menu
+	def setMenu(self, MainWindow):
 		self.menuMenu.setObjectName("menuMenu")
 		self.menuSettings = QtWidgets.QMenu(self.menubar)
 		self.menuSettings.setObjectName("menuSettings")
@@ -380,8 +448,7 @@ class Ui_MainWindow(object):
 
 		self.setFreq = QtWidgets.QAction(MainWindow)
 		self.setFreq.setObjectName("set_Frequence")
-		self.setFreq.triggered.connect(functools.partial(self.showFreqControl, MainWindow, 1, 5))
-
+		self.setFreq.triggered.connect(functools.partial(self.showFreqControl, MainWindow))
 
 		self.menuMenu.addAction(self.actionNew_Game)
 		self.menuMenu.addAction(self.actionReturn)
@@ -400,6 +467,19 @@ class Ui_MainWindow(object):
 		self.retranslateUi(MainWindow)
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+	def setShelter(self):
+		# add shelter for blinking
+		constants.BLOCK_WIDTH = self.buttonWidth * 4 + self.spaceWidth * 3
+		constants.BLOCK_HEIGHT = self.buttonHeight * 4 + self.spaceHeight * 3
+		for i in range(0, 4):
+			self.blinkShelter.append(QtWidgets.QWidget(self.centralwidget))
+			self.blinkShelter[i].setObjectName("shelter" + str(i))
+
+			xPosition = self.startPosX + ((constants.BLOCK_WIDTH + constants.XSPACE + self.spaceWidth) if (i % 2) else 0)
+			yPosition = self.startPosY + ((constants.BLOCK_HEIGHT + constants.YSPACE + self.spaceHeight) if (i > 1) else 0)
+			self.blinkShelter[i].setGeometry(QtCore.QRect(xPosition, yPosition, constants.BLOCK_WIDTH, constants.BLOCK_HEIGHT))
+
+	def setTimer(self):
 		# connect QTimer
 		self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
 		self.timer[1].timeout.connect(functools.partial(self.blink, block=constants.UPPER_RIGHT))
@@ -409,33 +489,3 @@ class Ui_MainWindow(object):
 		# start QTimer (start to blink)
 		for i in range(0, 4):
 			self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
-
-
-	def retranslateUi(self, MainWindow):
-		_translate = QtCore.QCoreApplication.translate
-		MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-		self.menuMenu.setTitle(_translate("MainWindow", "Game"))
-		self.menuSettings.setTitle(_translate("MainWindow", "Settings"))
-		self.menuBlink.setTitle(_translate("MainWindow", "Blink"))
-		self.actionNew_Game.setText(_translate("MainWindow", "New Game"))
-		self.actionReturn.setText(_translate("MainWindow", "Return"))
-		self.actionWhole_Board_ON.setText(_translate("MainWindow", "Whole Board ON"))
-		self.actionWhole_Board_OFF.setText(_translate("MainWindow", "Whole Board OFF"))
-
-		self.actionUpper_Left_ON.setText(_translate("MainWindow", "Upper-Left:ON"))
-		self.actionUpper_Right_ON.setText(_translate("MainWindow", "Upper-Right:ON"))
-		self.actionLower_Left_ON.setText(_translate("MainWindow", "Lower-Left:ON"))
-		self.actionLower_Right_ON.setText(_translate("MainWindow", "Lower-Right:ON"))
-		self.setFreq.setText(_translate("MainWindow", "Set-Frequence:ON"))
-
-		self.actionNew_Game.setShortcut(_translate("MainWindow", "Ctrl+N"))
-		self.actionReturn.setShortcut(_translate("MainWindow", "Ctrl+R"))
-
-		self.actionWhole_Board_ON.setShortcut(_translate("MainWindow", "Ctrl+E"))
-		self.actionWhole_Board_OFF.setShortcut(_translate("MainWindow", "Ctrl+D"))
-
-		self.actionUpper_Left_ON.setShortcut(_translate("MainWindow", "Ctrl+1"))
-		self.actionUpper_Right_ON.setShortcut(_translate("MainWindow", "Ctrl+2"))
-		self.actionLower_Left_ON.setShortcut(_translate("MainWindow", "Ctrl+3"))
-		self.actionLower_Right_ON.setShortcut(_translate("MainWindow", "Ctrl+4"))
-		self.setFreq.setShortcut(_translate("MainWindow", "Ctrl+F"))
