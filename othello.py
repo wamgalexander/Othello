@@ -17,15 +17,13 @@ class Ui_MainWindow(object):
 	playerColor = constants.BLACK
 	state = constants.MAIN
 	zoomInIndex = 0
-	zoomWigth = []
-	zoomHeight = []
 	setting = False
 
 	placed = [constants.EMPTY] * 64
 	timer = []
-	cross = []
 	text = []
 	grid = []
+	blinkShelter = []
 
 	screenWidth = 0
 	screenHeight = 0
@@ -54,20 +52,19 @@ class Ui_MainWindow(object):
 		self.setReturnButton()
 		# freq ctrl
 		self.setFreqCtrl()
-		# cross
-		self.setCross()
 		# menubar
 		self.setMenubar(MainWindow)
 		# menu
 		self.setMenu(MainWindow)
+		# Shelter
+		self.setShelter()
 		# timer
 		self.setTimer()
 
 ####### Fuction #######
 ## blink ##
 	def blink(self, block):
-		self.cross[block].setVisible(False if self.cross[block].isVisible() else True)
-		#self.cross[block].setStyleSheet("background-color:"+ (constants.BLINK_COLOR[block] if(self.cross[block].isVisible()) else constants.COLOR[block])+";")
+		self.blinkShelter[block].setVisible(False if self.blinkShelter[block].isVisible() else True)
 
 	def blinkControl(self, block, allSwitch = False, switch = False):
 		if(not allSwitch):
@@ -99,48 +96,78 @@ class Ui_MainWindow(object):
 
 ## Block ##
 	def showBlockGrid(self, block):
-		self.cross[block].setVisible(False)
+		self.blinkShelter[block].setVisible(False)
 
 	def gridColor(self, block):
-		self.cross[block].setStyleSheet("background-color:" + constants.COLOR[block] + ";")
+		index = []
+		length = None
+		if(self.state == constants.MAIN):
+			index = constants.MAIN_BLOCK[block]
+			length = constants.MAIN_BLOCK_LENGTH
+		elif(self.state == constants.ZOOM_IN1):
+			index = self.zoomInIndex + constants.ZOOM_IN1_BLOCK[block]
+			length = constants.ZOOM_IN1_BLOCK_LENGTH
+		else:
+			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
+			length = constants.ZOOM_IN2_BLOCK_LENGTH
+		for y in range(0, length):
+			for x in range(0, length):
+				self.grid[index + y + x * 8].setStyleSheet("background-color: " + constants.COLOR[block] + ";"
+															"font: 550 40pt \"Helvetica\";\n"
+															"color: white;\n")
 
 ## Zoom ##
 	# zoom out
 	def zoomOut(self):
 		if(self.state == constants.ZOOM_IN1):
-			self.zoomInIndex = 0
+			self.hideAllGrids()
+			for y in range(0, 8):
+				for x in range(0, 8):
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) + (constants.XSPACE if int(x / 4) else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) + (constants.YSPACE if int(y / 4) else 0)
+					self.grid[x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth, self.buttonHeight))
+					self.grid[x + y * 8].setVisible(True)
 			self.state = constants.MAIN
-			self.setZoom(self.zoomInIndex, self.state)
 		elif(self.state == constants.ZOOM_IN2):
-			self.zoomInIndex = constants.ZOOM_IN1_TABLE[self.zoomInIndex]
+			self.hideAllGrids()
+			number = constants.ZOOM_IN1_TABLE[self.zoomInIndex]
+			self.zoomInIndex = number
+			for y in range(0, 4):
+				for x in range(0, 4):
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) * 2 + (constants.XSPACE if int(x / 2) else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) * 2 + (constants.YSPACE if int(y / 2) else 0)
+					self.grid[number + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 2, self.buttonHeight * 2))
+					self.grid[number + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN1
-			self.setZoom(self.zoomInIndex, self.state)
+		for i in range(0, 4):
+			self.gridColor(i)
 
 	# zoom in
-	def zoomIn(self, cross):
-		index = int(cross.objectName())
+	def zoomIn(self, grid):
+		index = int(grid.objectName())
 		if(self.state == constants.MAIN):
-			i = self.zoomInIndex + int(index%2)*4 + int(index/2)*32
-			self.zoomInIndex = constants.ZOOM_IN1_TABLE[i]
+			self.zoomInIndex = constants.ZOOM_IN1_TABLE[index]
+			self.hideAllGrids()
+			for y in range(0, 4):
+				for x in range(0, 4):
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) * 2 + (constants.XSPACE if int(x / 2) else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) * 2 + (constants.YSPACE if int(y / 2) else 0)
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 2, self.buttonHeight * 2))
+					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN1
-			self.setZoom(self.zoomInIndex, self.state)
 		elif(self.state == constants.ZOOM_IN1):
-			i = self.zoomInIndex + int(index%2)*2 + int(index/2)*16
-			self.zoomInIndex = constants.ZOOM_IN2_TABLE[i]
-			self.state = constants.ZOOM_IN2
-			self.setZoom(self.zoomInIndex, self.state)
-
-	def setZoom(self, i, s):
+			self.zoomInIndex = constants.ZOOM_IN2_TABLE[index]
 			self.hideAllGrids()
 			for y in range(0, 2):
 				for x in range(0, 2):
-					index = x + y * 2
-					XPos = self.grid[i].x() + self.zoomWigth[s] * (3 if(x % 2) else 1) + self.spaceWidth * (2 if(x % 2) else 0)
-					YPos = self.grid[i].y() + self.zoomHeight[s] * (3 if(y / 2) else 1) + self.spaceHeight * (2 if(y / 2) else 0)
-					self.setCrossPos(index, XPos, YPos)
-					self.gridColor(index)
-					self.cross[index].setVisible(True)
+					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) * 4 + (constants.XSPACE if x else 0)
+					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) * 4 + (constants.YSPACE if y else 0)
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 4, self.buttonHeight * 4))
+					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
+			self.state = constants.ZOOM_IN2
 
+		for i in range(0, 4):
+			self.gridColor(i)
 ## Click ##
 	# on click event
 	def eventFilter(self, obj, event):
@@ -194,12 +221,8 @@ class Ui_MainWindow(object):
 		self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
 
 	def hideAllGrids(self):
-		for i in range(0, 4):
-			self.cross[i].setVisible(False)
-
-## cross ##
-	def setCrossPos(self, block, XPos, YPos):
-		self.cross[block].setGeometry(QtCore.QRect(XPos, YPos, self.spaceWidth, self.spaceHeight))
+		for i in range(0, 64):
+			self.grid[i].setVisible(False)
 
 ## freq ##
 	def editFreq(self):
@@ -254,12 +277,12 @@ class Ui_MainWindow(object):
 			self.timer.append(QTimer())
 
 		r = QtWidgets.QDesktopWidget().screenGeometry()
-		#constants.XSPACE = r.width() * (40/840)
-		#constants.YSPACE = r.height() * (40/680)
+		constants.XSPACE = r.width() * (40/840)
+		constants.YSPACE = r.height() * (40/680)
 		self.screenWidth = r.width()
 		self.screenHeight = r.height()
-		self.spaceWidth = self.screenWidth * (12/840)
-		self.spaceHeight = self.screenHeight * (16/680)
+		self.spaceWidth = self.screenWidth * (6/840)
+		self.spaceHeight = self.screenHeight * (8/680)
 		self.buttonWidth = self.screenWidth * (50/840)
 		self.buttonHeight = self.screenHeight * (60/680)
 		self.resetButtonWidth = self.screenWidth * (110/840)
@@ -270,8 +293,6 @@ class Ui_MainWindow(object):
 		self.boardHeight = self.screenHeight
 		self.startPosX = self.screenWidth * (1/7)
 		self.startPosY = self.screenHeight * (15/680)
-		self.zoomWigth = [2 * self.buttonWidth + self.spaceWidth, self.buttonWidth, (self.buttonWidth - self.spaceWidth)/2]
-		self.zoomHeight = [2 * self.buttonHeight + self.spaceHeight, self.buttonHeight, (self.buttonHeight - self.spaceHeight)/2]
 
 	def center(self):
 		window = self.frameGeometry()
@@ -295,13 +316,13 @@ class Ui_MainWindow(object):
 			for x in range(0, 8):
 				index = x + y * 8
 				self.grid.append(QRightClickButton(self.centralwidget))
-				xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth)
-				yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight)
+				xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) + (constants.XSPACE if int(x / 4) else 0)
+				yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) + (constants.YSPACE if int(y / 4) else 0)
 				self.grid[index].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth, self.buttonHeight))
 				self.grid[index].setStyleSheet("border-color: rgb(255, 255, 255);"
 												"font: 550 40pt \"Helvetica\";"
 												"color: white;"
-												"background-color:"+ constants.COLOR[4] +";")
+												"background-color:"+ constants.COLOR[int(x / 4) + int(y / 4) * 2] +";")
 				self.grid[index].setText(str(index + 1))
 				self.grid[index].setAutoDefault(False)
 				self.grid[index].setObjectName(str(index))
@@ -309,9 +330,9 @@ class Ui_MainWindow(object):
 				#  connect click event with gridOnClick
 				self.grid[index].clicked.connect(self.gridOnClick)
 				#  creat event filter
-				#self.grid[index].installEventFilter(self)
+				self.grid[index].installEventFilter(self)
 				#  connect right click event with gridOnRightClick
-				#self.grid[index].rightClicked.connect(self.gridOnRightClick)
+				self.grid[index].rightClicked.connect(self.gridOnRightClick)
 				self.grid[index].setFocusPolicy(QtCore.Qt.NoFocus)
 
 	def setRefreshButton(self):
@@ -371,22 +392,6 @@ class Ui_MainWindow(object):
 									   "border-color: rgb(102, 102, 255);\n"
 									   "font: 14pt \"Courier\";")
 			self.text[i].setVisible(False)
-
-	def setCross(self):
-		for y in range(0, 2):
-			for x in range(0, 2):
-				i = x + y * 2
-				self.cross.append(QRightClickButton(self.centralwidget))
-				XPos = self.startPosX + self.zoomWigth[self.state]*(3 if(x % 2) else 1) + self.spaceWidth * (2 if(x % 2) else 0)
-				YPos = self.startPosY + self.zoomHeight[self.state]*(3 if(y / 2) else 1) + self.spaceHeight * (2 if(y / 2) else 0)
-				self.setCrossPos(i, XPos, YPos)
-				self.gridColor(i)
-				self.cross[i].setObjectName(str(i))
-				self.cross[i].setIconSize(QtCore.QSize(self.spaceWidth, self.spaceHeight))
-				self.cross[i].clicked.connect(self.gridOnClick)
-				self.cross[i].installEventFilter(self)
-				self.cross[i].rightClicked.connect(self.gridOnRightClick)
-				self.cross[i].setFocusPolicy(QtCore.Qt.NoFocus)
 
 	def setMenubar(self, MainWindow):
 		MainWindow.setCentralWidget(self.centralwidget)
@@ -461,6 +466,18 @@ class Ui_MainWindow(object):
 
 		self.retranslateUi(MainWindow)
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+	def setShelter(self):
+		# add shelter for blinking
+		constants.BLOCK_WIDTH = self.buttonWidth * 4 + self.spaceWidth * 3
+		constants.BLOCK_HEIGHT = self.buttonHeight * 4 + self.spaceHeight * 3
+		for i in range(0, 4):
+			self.blinkShelter.append(QtWidgets.QWidget(self.centralwidget))
+			self.blinkShelter[i].setObjectName("shelter" + str(i))
+
+			xPosition = self.startPosX + ((constants.BLOCK_WIDTH + constants.XSPACE + self.spaceWidth) if (i % 2) else 0)
+			yPosition = self.startPosY + ((constants.BLOCK_HEIGHT + constants.YSPACE + self.spaceHeight) if (i > 1) else 0)
+			self.blinkShelter[i].setGeometry(QtCore.QRect(xPosition, yPosition, constants.BLOCK_WIDTH, constants.BLOCK_HEIGHT))
 
 	def setTimer(self):
 		# connect QTimer
