@@ -229,7 +229,7 @@ class Ui_MainWindow(object):
 				for x in range(0, 4):
 					xPosition = self.startPosX + x * (self.buttonWidth+self.spaceWidth) * 2 + (constants.XSPACE if int(x / 2) else 0)
 					yPosition = self.startPosY + y * (self.buttonHeight+self.spaceHeight) * 2 + (constants.YSPACE if int(y / 2) else 0)
-					self.grid[number + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 2, self.buttonHeight * 2))
+					self.grid[self.zoomInIndex + x + y * 8].setGeometry(QtCore.QRect(xPosition, yPosition, self.buttonWidth * 2, self.buttonHeight * 2))
 					self.grid[self.zoomInIndex + x + y * 8].setVisible(True)
 			self.state = constants.ZOOM_IN1
 		elif(self.state == constants.ZOOM_IN1):
