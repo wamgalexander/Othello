@@ -170,6 +170,11 @@ class Ui_MainWindow(object):
 		for i in range (0, 64):
 			self.placed[i] = constants.EMPTY
 
+		for y in range(0, 8):
+			for x in range(0, 8):
+				i = x + y * 8
+				self.grid[i].setStyleSheet("background-color:"+ constants.COLOR[int(x / 4) + int(y / 4) * 2] +";")
+
 	def restart(self):
 		for i in range(0, 64):
 			self.grid[i].setIcon(QtGui.QIcon())
@@ -191,8 +196,9 @@ class Ui_MainWindow(object):
 			grid.setIcon(QtGui.QIcon("./src/black.png"))
 			grid.setText("")
 			self.placed[i] = constants.BLACK
-			
-		self.grid[i].setStyleSheet("background-color:"+ self.BOARD_COLOR +";")
+
+		if(self.placed[i] != constants.EMPTY):
+			self.grid[i].setStyleSheet("background-color:"+ self.BOARD_COLOR +";")
 		self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
 
 	def hideAllGrids(self):
