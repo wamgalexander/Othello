@@ -113,7 +113,6 @@ class Ui_MainWindow(object):
 		S = self.state
 		I = self.zoomInIndex
 		A = (0 if(act == "IN") else 1)
-		print("(S,I,A) = ", S, I, A)
 
 		if(act == "IN"):
 			index = int(sender.objectName())
