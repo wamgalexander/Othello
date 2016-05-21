@@ -138,7 +138,10 @@ class Ui_MainWindow(object):
 			for y in range(0, L):
 				for x in range(0, L):
 					i = index + x + y * 8
-					self.grid[i].setStyleSheet("background-color:"+ constants.COLOR[block]+";")
+					if(self.placed[i] == constants.EMPTY):
+						self.grid[i].setStyleSheet("background-color:"+ constants.COLOR[block]+";")
+					else:
+						self.grid[i].setStyleSheet("background-color:"+ self.BOARD_COLOR +";")
 
 ## Click ##
 	# on click event
@@ -176,17 +179,20 @@ class Ui_MainWindow(object):
 		self.init()
 
 	def placeChess(self, grid):
-		if(self.placed[int(grid.objectName())] != constants.EMPTY):
+		i = int(grid.objectName())
+		if(self.placed[i] != constants.EMPTY):
 			return
 
 		if self.playerColor == constants.WHITE:
 			grid.setIcon(QtGui.QIcon("./src/white.png"))
 			grid.setText("")
-			self.placed[int(grid.objectName())] = constants.WHITE
+			self.placed[i] = constants.WHITE
 		else:
 			grid.setIcon(QtGui.QIcon("./src/black.png"))
 			grid.setText("")
-			self.placed[int(grid.objectName())] = constants.BLACK
+			self.placed[i] = constants.BLACK
+			
+		self.grid[i].setStyleSheet("background-color:"+ self.BOARD_COLOR +";")
 		self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
 
 	def hideAllGrids(self):
