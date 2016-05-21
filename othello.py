@@ -20,6 +20,7 @@ class Ui_MainWindow(object):
 	zoomWigth = []
 	zoomHeight = []
 	setting = False
+	BOARD_COLOR = constants.COLOR[4]
 
 	placed = [constants.EMPTY] * 64
 	timer = []
@@ -109,42 +110,37 @@ class Ui_MainWindow(object):
 		self.cross[block].setStyleSheet("background-color:" + constants.COLOR[block] + ";")
 
 ## Zoom ##
-	# zoom out
-	def zoomOut(self):
-		if(self.state == constants.ZOOM_IN1):
-			self.zoomInIndex = 0
-			self.state = constants.MAIN
-			self.setZoom(self.zoomInIndex, self.state)
-		elif(self.state == constants.ZOOM_IN2):
-			self.zoomInIndex = constants.ZOOM_IN1_TABLE[self.zoomInIndex]
-			self.state = constants.ZOOM_IN1
-			self.setZoom(self.zoomInIndex, self.state)
+	def zoom(self, sender, act):
+		S = self.state
+		I = self.zoomInIndex
+		A = (0 if(act == "IN") else 1)
+		print("(S,I,A) = ", S, I, A)
 
-	# zoom in
-	def zoomIn(self, cross):
-		index = int(cross.objectName())
-		if(self.state == constants.MAIN):
-			i = self.zoomInIndex + int(index%2)*4 + int(index/2)*32
-			self.zoomInIndex = constants.ZOOM_IN1_TABLE[i]
-			self.state = constants.ZOOM_IN1
-			self.setZoom(self.zoomInIndex, self.state)
-		elif(self.state == constants.ZOOM_IN1):
-			i = self.zoomInIndex + int(index%2)*2 + int(index/2)*16
-			self.zoomInIndex = constants.ZOOM_IN2_TABLE[i]
-			self.state = constants.ZOOM_IN2
-			self.setZoom(self.zoomInIndex, self.state)
+		if(act == "IN"):
+			index = int(sender.objectName())
+			L = constants.ZOOM_LENGTH[S]
+			CrossBlockLen = constants.CROSS_BLOCK_LENGTH
+			Wrap = constants.ZOOM_WRAP[S]
+			I = I + int(index%CrossBlockLen) * L + int(index/CrossBlockLen) * Wrap
 
-	def setZoom(self, i, s):
+		if(S != constants.ZOOM_END_STATE[A]):
+			S = S + constants.MOVE_STATE[A]
+		I = constants.ZOOM_TABLE[S][I]
+
+		self.setZoom(I, S)
+		self.zoomInIndex = I
+		self.state = S
+
+	def setZoom(self, I, S):
 		self.hideAllGrids()
-		for y in range(0, 2):
-			for x in range(0, 2):
-				index = x + y * 2
-				XPos = self.grid[i].x() + self.zoomWigth[s] * (3 if(x % 2) else 1) + self.spaceWidth * (2 if(x % 2) else 0)
-				YPos = self.grid[i].y() + self.zoomHeight[s] * (3 if(y / 2) else 1) + self.spaceHeight * (2 if(y / 2) else 0)
-				self.setCrossPos(index, XPos, YPos)
-				self.gridColor(index)
-				self.cross[index].setVisible(not self.isCoverChess(i, s, index))
-
+		L = constants.ZOOM_LENGTH[S]
+		for block in range(0, 4):
+			index = I + constants.ZOOM_COLOR_BLOCK[S][block]
+			for y in range(0, L):
+				for x in range(0, L):
+					i = index + x + y * 8
+					self.grid[i].setStyleSheet("background-color:"+ constants.COLOR[block]+";")
+					
 ## Click ##
 	# on click event
 	def eventFilter(self, obj, event):
@@ -162,7 +158,7 @@ class Ui_MainWindow(object):
 
 	# right click
 	def gridOnRightClick(self):
-		self.zoomIn(self.sender())
+		self.zoom(self.sender(), "IN")
 
 ## action ##
 	def init(self):
@@ -177,7 +173,7 @@ class Ui_MainWindow(object):
 			self.grid[i].setIcon(QtGui.QIcon())
 			#self.grid[i].setText(str(i + 1))
 		while self.state != constants.MAIN:
-			self.zoomOut()
+			self.zoom(constants.NO_SENDER, "OUT")
 		self.init()
 
 	def placeChess(self, grid):
@@ -197,27 +193,35 @@ class Ui_MainWindow(object):
 	def hideAllGrids(self):
 		for i in range(0, 4):
 			self.cross[i].setVisible(False)
+		for i in range(0, 64):
+			self.grid[i].setStyleSheet("background-color:"+ self.BOARD_COLOR +";")
 
 ## cross ##
 	def setCrossPos(self, block, XPos, YPos):
 		self.cross[block].setGeometry(QtCore.QRect(XPos, YPos, self.spaceWidth, self.spaceHeight))
 
-	def isCoverChess(self, zoomInInex, state, index):
+	def isCoverChess(self, zoomInInex, state, block):
 		crossCoverChess = []
-		if(state == constants.ZOOM_IN2):
-			for y in range(0, 2):
-				for x in range(0, 2):
-					gridNum = zoomInInex + x + y * 8
-					crossCoverChess.append((False if(self.placed[gridNum] == constants.EMPTY) else True))
-		else:
-			crossCoverChess = [False] * 4
+		L = constants.ZOOM_LENGTH[state]
+		for c in range(0, 4):
+			tmp = True
+			I = zoomInInex + constants.ZOOM_COLOR_BLOCK[state][c]
+			for y in range(0, L):
+				for x in range(0, L):
+					i = I + x + y * 8
+					if(self.placed[i] == constants.EMPTY):
+						tmp = False
+						break
+			crossCoverChess.append(tmp)
+
 		self.covered = crossCoverChess
-		return crossCoverChess[index]
+		return crossCoverChess[block]
 
 	def isAllCover(self):
-		if self.covered == [True, True, True, True]:
+		if self.covered == [True] * 4:
 			while self.state != constants.MAIN :
-				self.zoomOut()
+				self.zoom(constants.NO_SENDER, "OUT")
+			self.covered = [False] * 4
 			return True
 		return False
 
@@ -338,7 +342,7 @@ class Ui_MainWindow(object):
 				self.grid[i].setStyleSheet("border-color: rgb(255, 255, 255);"
 												"font: 550 40pt \"Helvetica\";"
 												"color: white;"
-												"background-color:"+ constants.COLOR[4] +";")
+												"background-color:"+ constants.COLOR[int(x / 4) + int(y / 4) * 2] +";")
 
 	def setRefreshButton(self):
 		XPos = self.screenWidth*(670/840) + constants.XSPACE
@@ -367,7 +371,7 @@ class Ui_MainWindow(object):
 		self.grid[65].setEnabled(True)
 		self.grid[65].setAutoDefault(False)
 		self.grid[65].setFocusPolicy(QtCore.Qt.NoFocus)
-		self.grid[65].clicked.connect(self.zoomOut)
+		self.grid[65].clicked.connect(functools.partial(self.zoom, constants.NO_SENDER, "OUT"))
 		self.grid[65].setStyleSheet("border-color: rgb(255, 255, 255);"
 									"background-color: rgb(19, 146, 59);")
 
@@ -462,7 +466,7 @@ class Ui_MainWindow(object):
 		self.actionNew_Game.triggered.connect(self.restart)
 		self.actionReturn = QtWidgets.QAction(MainWindow)
 		self.actionReturn.setObjectName("actionReturn")
-		self.actionReturn.triggered.connect(self.zoomOut)
+		self.actionReturn.triggered.connect(functools.partial(self.zoom, constants.NO_SENDER, "OUT"))
 
 		self.actionWhole_Board_ON = QtWidgets.QAction(MainWindow)
 		self.actionWhole_Board_ON.setObjectName("actionWhole_Board_ON")
