@@ -114,7 +114,6 @@ class Ui_MainWindow(object):
 		S = self.state
 		I = self.zoomInIndex
 		A = (0 if(act == "IN") else 1)
-		print("(S,I,A) = ", S, I, A)
 
 		if(act == "IN"):
 			index = int(sender.objectName())
@@ -140,7 +139,7 @@ class Ui_MainWindow(object):
 				for x in range(0, L):
 					i = index + x + y * 8
 					self.grid[i].setStyleSheet("background-color:"+ constants.COLOR[block]+";")
-					
+
 ## Click ##
 	# on click event
 	def eventFilter(self, obj, event):
