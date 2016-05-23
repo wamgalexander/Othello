@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtWidgets
 import sys # We need sys so that we can pass argv to QApplication
 
 import othello # This file holds our MainWindow and all design related things

@@ -1,6 +1,6 @@
-from PyQt5 import Qt, QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QWidget, QDesktopWidget
-from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QDesktopWidget
+from PyQt5.QtCore import pyqtSignal, QTimer
 import functools
 import random
 
@@ -91,7 +91,7 @@ class Ui_MainWindow(object):
 		for y in range(0, length):
 			for x in range(0, length):
 				self.grid[index + y + x * 8].setVisible(True)
-				
+
 	def showBlockGrid(self, block):
 		index = []
 		length = None
