@@ -115,20 +115,19 @@ class Ui_MainWindow(object):
 		I = self.zoomInIndex
 		A = (0 if(act == "IN") else 1)
 
-		if(act == "IN"):
-			index = int(sender.objectName())
-			L = constants.ZOOM_LENGTH[S]
-			CrossBlockLen = constants.CROSS_BLOCK_LENGTH
-			Wrap = constants.ZOOM_WRAP[S]
-			I = I + int(index%CrossBlockLen) * L + int(index/CrossBlockLen) * Wrap
-
 		if(S != constants.ZOOM_END_STATE[A]):
-			S = S + constants.MOVE_STATE[A]
-		I = constants.ZOOM_TABLE[S][I]
+			if(act == "IN"):
+				index = int(sender.objectName())
+				L = constants.ZOOM_LENGTH[S]
+				CrossBlockLen = constants.CROSS_BLOCK_LENGTH
+				Wrap = constants.ZOOM_WRAP[S]
+				I = I + int(index%CrossBlockLen) * L + int(index/CrossBlockLen) * Wrap
 
-		self.setZoom(I, S)
-		self.zoomInIndex = I
-		self.state = S
+			S = S + constants.MOVE_STATE[A]
+			I = constants.ZOOM_TABLE[S][I]
+			self.setZoom(I, S)
+			self.zoomInIndex = I
+			self.state = S
 
 	def setZoom(self, I, S):
 		self.hideAllGrids()
