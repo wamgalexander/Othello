@@ -25,7 +25,7 @@ class Ui_MainWindow(object):
 	text = []
 	grid = []
 	setting = False
-	lastBlink = [-1] * 4
+	lastBlink = [0] * 4
 	screenWidth = 0
 	screenHeight = 0
 	startPosX = 0
@@ -122,6 +122,8 @@ class Ui_MainWindow(object):
 	def blink(self, block):
 		index = []
 		length = None
+		offset = [9, 13, 41, 45]
+		running = [0, 1, 9, 8]
 		if(self.state == constants.MAIN):
 			index = constants.MAIN_BLOCK[block]
 			length = constants.MAIN_BLOCK_LENGTH
@@ -131,18 +133,13 @@ class Ui_MainWindow(object):
 		else:
 			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
 			length = constants.ZOOM_IN2_BLOCK_LENGTH
-		randomX = random.randint(0, length-1)
-		randomY = random.randint(0, length-1)
-		randomNum = randomY + randomX * 8
-		while randomNum == self.lastBlink[block]:
-			randomX = random.randint(0, length-1)
-			randomY = random.randint(0, length-1)
-			randomNum = randomY + randomX * 8
-		if (not self.lastBlink[block] == -1) and (not self.grid[index + self.lastBlink[block]].isVisible()):
-			self.grid[index + self.lastBlink[block]].setVisible(True)
+		index = offset[block]
+		if (not self.grid[index + running[self.lastBlink[block]]].isVisible()):
+			self.grid[index + running[self.lastBlink[block]]].setVisible(True)
+			self.lastBlink[block] = (self.lastBlink[block] + 1) % 4
+			print (self.lastBlink[block])
 		else:
-			self.grid[index + randomNum].setVisible(False)
-		self.lastBlink[block] = randomNum
+			self.grid[index + running[self.lastBlink[block]]].setVisible(False)
 
 	def gridColor(self, block):
 		index = []
