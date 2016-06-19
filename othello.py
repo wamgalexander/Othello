@@ -24,6 +24,7 @@ class Ui_MainWindow(object):
 	placed = [constants.EMPTY] * 64
 	timer = []
 	cross = []
+	lastBlink = [0] * 4
 	covered = [False] * 4
 	text = []
 	grid = []
@@ -68,7 +69,7 @@ class Ui_MainWindow(object):
 ## blink ##
 	def blink(self, block):
 		if(not self.isAllCover()):
-			if(block <= 2):
+			if(block < 2):
 				self.CrossBlink(block)
 			else:
 				self.CycleBlink(block)
@@ -81,8 +82,9 @@ class Ui_MainWindow(object):
 	def CycleBlink(self, block):
 		index = []
 		length = None
-		offset = [41, 45]
+		offset = [0, 0, 41, 45]
 		running = [0, 1, 9, 8]
+
 		if(self.state == constants.MAIN):
 			index = constants.MAIN_BLOCK[block]
 			length = constants.MAIN_BLOCK_LENGTH
@@ -92,14 +94,15 @@ class Ui_MainWindow(object):
 		else:
 			index = self.zoomInIndex + constants.ZOOM_IN2_BLOCK[block]
 			length = constants.ZOOM_IN2_BLOCK_LENGTH
-		index = offset[block]
-		if (not self.grid[index + running[self.lastBlink[block]]].isVisible()):
-			self.grid[index + running[self.lastBlink[block]]].setVisible(True)
-			self.lastBlink[block] = (self.lastBlink[block] + 1) % 4
-			print (self.lastBlink[block])
-		else:
-			self.grid[index + running[self.lastBlink[block]]].setVisible(False)
 
+		index = offset[block]
+		I = index + running[self.lastBlink[block]]
+		if (not self.grid[I].isVisible()):
+			self.grid[I].setVisible(True)
+			self.grid[I].setStyleSheet("background-color:" + constants.COLOR[block] + ";")
+			self.lastBlink[block] = (self.lastBlink[block] + 1) % 4
+		else:
+			self.grid[I].setVisible(False)
 
 
 	def blinkControl(self, block, allSwitch = False, switch = False):
@@ -367,7 +370,7 @@ class Ui_MainWindow(object):
 				self.grid[i].setStyleSheet("border-color: rgb(255, 255, 255);"
 												"font: 550 40pt \"Helvetica\";"
 												"color: white;"
-												"background-color:"+ constants.COLOR[4] +";")
+												"background-color:"+ constants.COLOR[int(x / 4) + int(y / 4) * 2] +";")
 
 	def setRefreshButton(self):
 		XPos = self.screenWidth*(670/840) + constants.XSPACE
@@ -438,7 +441,7 @@ class Ui_MainWindow(object):
 									   "font: 14pt \"Courier\";")
 
 	def setCross(self):
-		for y in range(0, 2):
+		for y in range(0, 1):
 			for x in range(0, 2):
 				i = x + y * 2
 				self.cross.append(QRightClickButton(self.centralwidget))
