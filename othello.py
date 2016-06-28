@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDesktopWidget
-from PyQt5.QtCore import pyqtSignal, QTimer
+from PyQt5.QtCore import pyqtSignal, QTimer, QTime
 import functools
 
 import constants
@@ -19,7 +19,12 @@ class Ui_MainWindow(object):
 	cross = []
 	text = []
 	grid = []
+	result = []
+	T = []
 
+	F = constants.ONE_SEC/constants.FREQ[0]
+	isBlink = False
+	cnt = 0
 	screenWidth = 0
 	screenHeight = 0
 	startPosX = 0
@@ -48,22 +53,22 @@ class Ui_MainWindow(object):
 ## blink ##
 	def blink(self, block):
 		V = self.cross[block].isVisible()
+		self.cnt = self.cnt + 0.5
 		self.cross[block].setVisible(not V)
 
-	def blinkControl(self, block, allSwitch = False, switch = False):
-		if(not allSwitch):
-			if(self.timer[block].isActive()):
-				self.timer[block].stop()
-				self.showBlockGrid(block)
-			else:
-				self.timer[block].start(constants.ONE_SEC/constants.FREQ[block])
+	def blinkControl(self, block, allSwitch = False):
+		self.isBlink = not self.isBlink
+		if(self.isBlink):
+			for i in range(0, 4):
+				self.result[i].setVisible(False)
+			self.cnt = 0
+			self.T[0].start()
+			self.timer[0].start(self.F)
 		else:
-			if(switch == constants.ON):
-				if(not self.timer[0].isActive()):
-					self.timer[0].start(constants.ONE_SEC/constants.FREQ[0])
-			else:
-				self.timer[0].stop()
-				self.showBlockGrid(0)
+			self.timer[block].stop()
+			self.setFreqResult(self.T[0].elapsed())
+			self.showBlockGrid(block)
+
 		self.menuBlinkControl()
 
 	def menuBlinkControl(self):
@@ -81,12 +86,24 @@ class Ui_MainWindow(object):
 		self.cross[block].setGeometry(QtCore.QRect(XPos, YPos, self.crossWidth, self.crossHeight))
 
 ## freq ##
+	def setFreqResult(self, t):
+		self.result[0].setPlainText("-------------------------")
+		self.result[1].setPlainText("f = " + str((self.cnt*1000)/t))
+		self.result[2].setPlainText("cnt = " + str(self.cnt) + " times")
+		self.result[3].setPlainText("t = " + str(t/1000) + "s")
+		for i in range(0, 4):
+			self.result[i].setVisible(True)
+
 	def editFreq(self):
-		constants.FREQ[0] = int(self.text[0].toPlainText())
 		if(self.timer[0].isActive()):
 			self.timer[0].stop()
 		if(constants.FREQ[0] > 0):
-			self.timer[0].start(constants.ONE_SEC/constants.FREQ[0])
+			constants.FREQ[0] = int(self.text[0].toPlainText())
+			self.F = constants.ONE_SEC/constants.FREQ[0]
+			self.isBlink = True
+			self.cnt = 0
+			self.T[0].start()
+			self.timer[0].start(self.F)
 
 	def showFreqControl(self, MainWindow):
 		self.setting = not self.setting
@@ -114,6 +131,7 @@ class Ui_MainWindow(object):
 	def layoutSizeVar(self):
 		# creat timer
 		self.timer.append(QTimer())
+		self.T.append(QTime())
 
 		r = QtWidgets.QDesktopWidget().screenGeometry()
 		self.screenWidth = r.width()
@@ -180,6 +198,26 @@ class Ui_MainWindow(object):
 								   "border-color: rgb(102, 102, 255);"
 								   "font: 14pt \"Courier\";")
 
+		# freq testing result
+		W = self.screenWidth*(150/840)
+		H = self.screenHeight*(20/680)
+
+		for i in range(0, 4):
+			XPos = self.screenWidth*(670/840)
+			YPos = self.screenHeight*(300/680) + H * i
+			self.result.append(QtWidgets.QTextEdit(self.centralwidget))
+			self.result[i].setObjectName("freq result")
+			self.result[i].setText("")
+			self.result[i].setGeometry(QtCore.QRect(XPos, YPos , W, H))
+			self.result[i].setEnabled(True)
+			self.result[i].setVisible(False)
+			self.result[i].setAcceptRichText(False)
+			self.result[i].setTextInteractionFlags(QtCore.Qt.TextEditorInteraction)
+			self.result[i].setStyleSheet("background-color: rgb(0, 0, 0);"
+									   "color: rgb(255, 255, 255);"
+									   "border-color: rgb(255, 255, 255);"
+									   "font: 12pt \"Courier\";")
+
 	def setCross(self):
 		self.cross.append(QRightClickButton(self.centralwidget))
 		XPos = self.startPosX
@@ -242,5 +280,5 @@ class Ui_MainWindow(object):
 		QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
 	def setTimer(self):
+		self.cnt = 0
 		self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
-		self.timer[0].start(constants.ONE_SEC/constants.FREQ[0])
