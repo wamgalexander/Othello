@@ -195,7 +195,6 @@ class Ui_MainWindow(object):
 		for y in range(0, 4):
 			for x in range(0, 4):
 				i = x + y * 4
-				print (i)
 				self.cycle.append(QRightClickButton(self.centralwidget))
 				Xpos = self.startPosX + x * (self.buttonWidth+self.spaceWidth)
 				Ypos = self.startPosY + y * (self.buttonHeight+self.spaceHeight)
