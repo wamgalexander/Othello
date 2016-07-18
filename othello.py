@@ -28,6 +28,11 @@ class Ui_MainWindow(object):
 	covered = [False] * 4
 	text = []
 	grid = []
+	T = []
+	ST = []
+	cont = 5000
+	suspend = 2000
+	isBlink = False
 
 	screenWidth = 0
 	screenHeight = 0
@@ -67,6 +72,17 @@ class Ui_MainWindow(object):
 
 ####### Fuction #######
 ## blink ##
+	def suspendTime(self, block):
+		self.T[block].stop()
+		self.timer[block].stop()
+		self.showBlockGrid(block)
+		self.ST[block].start(self.suspend)
+
+	def contBlink(self, block):
+		self.T[block].start(self.cont)
+		self.timer[block].start(constants.ONE_SEC/constants.FREQ[block])
+		self.ST[block].stop()
+
 	def blink(self, block):
 		if(not self.isAllCover()):
 			if(block < 2):
@@ -108,20 +124,23 @@ class Ui_MainWindow(object):
 	def blinkControl(self, block, allSwitch = False, switch = False):
 		if(not allSwitch):
 			if(self.timer[block].isActive()):
-				self.timer[block].stop()
-				self.showBlockGrid(block)
+				self.suspendTime(block)
 			else:
-				self.timer[block].start(constants.ONE_SEC/constants.FREQ[block])
+				self.contBlink(block)
 		else:
 			if(switch == constants.ON):
 				for i in range(0, 4):
 					if(not self.timer[i].isActive()):
+						self.T[i].start(self.cont)
 						self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
+						self.ST[i].stop()
 			else:
 				for i in range(0, 4):
+					self.T[i].stop()
 					self.timer[i].stop()
 					self.showBlockGrid(i)
-		self.menuBlinkControl()
+					self.ST[i].start(self.suspend)
+					self.menuBlinkControl()
 
 	def menuBlinkControl(self):
 		self.actionUpper_Left_ON.setText(QtCore.QCoreApplication.translate("MainWindow", \
@@ -260,8 +279,13 @@ class Ui_MainWindow(object):
 			constants.FREQ[i] = int(self.text[i].toPlainText())
 			if(self.timer[i].isActive()):
 				self.timer[i].stop()
+				self.T[i].stop()
+				self.showBlockGrid(i)
+				self.ST[i].start(self.suspend)
 			if(constants.FREQ[i] > 0):
+				self.T[i].start(self.cont)
 				self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
+				self.ST[i].stop()
 
 	def showFreqControl(self, MainWindow):
 		self.setting = not self.setting
@@ -311,6 +335,8 @@ class Ui_MainWindow(object):
 		# creat timer
 		for i in range(0, 4):
 			self.timer.append(QTimer())
+			self.T.append(QTimer())
+			self.ST.append(QTimer())
 
 		r = QtWidgets.QDesktopWidget().screenGeometry()
 		#constants.XSPACE = r.width() * (40/840)
@@ -543,11 +569,7 @@ class Ui_MainWindow(object):
 
 	def setTimer(self):
 		# connect QTimer
-		self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
-		self.timer[1].timeout.connect(functools.partial(self.blink, block=constants.UPPER_RIGHT))
-		self.timer[2].timeout.connect(functools.partial(self.blink, block=constants.LOWER_LEFT))
-		self.timer[3].timeout.connect(functools.partial(self.blink, block=constants.LOWER_RIGHT))
-
-		# start QTimer (start to blink)
 		for i in range(0, 4):
-			self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
+			self.timer[i].timeout.connect(functools.partial(self.blink, block=i))
+			self.T[i].timeout.connect(functools.partial(self.suspendTime, block=i))
+			self.ST[i].timeout.connect(functools.partial(self.contBlink, block=i))
