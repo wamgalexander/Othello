@@ -135,7 +135,8 @@ class Ui_MainWindow(object):
 
 ## Block ##
 	def showBlockGrid(self, block):
-		self.cross[block].setVisible(False)
+		if(block < 2):
+			self.cross[block].setVisible(False)
 
 	def gridColor(self, block):
 		self.cross[block].setStyleSheet("background-color:" + constants.COLOR[block] + ";")
