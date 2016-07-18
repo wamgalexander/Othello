@@ -23,7 +23,7 @@ class Ui_MainWindow(object):
 	T = []
 	ST = []
 	cont = 5000
-	suspend = 5000
+	suspend = 2000
 
 	F = constants.ONE_SEC/constants.FREQ[0]
 	isBlink = False
