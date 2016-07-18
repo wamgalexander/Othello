@@ -21,6 +21,9 @@ class Ui_MainWindow(object):
 	grid = []
 	result = []
 	T = []
+	ST = []
+	cont = 5000
+	suspend = 5000
 
 	F = constants.ONE_SEC/constants.FREQ[0]
 	isBlink = False
@@ -51,6 +54,19 @@ class Ui_MainWindow(object):
 
 ####### Fuction #######
 ## blink ##
+	def suspendTime(self, block):
+		self.isBlink = False
+		self.T[0].stop()
+		self.timer[block].stop()
+		self.showBlockGrid(block)
+		self.ST[0].start(self.suspend)
+
+	def contBlink(self, block):
+		self.isBlink = True
+		self.T[0].start(self.cont)
+		self.timer[block].start(self.F)
+		self.ST[0].stop()
+
 	def blink(self, block):
 		V = self.cross[block].isVisible()
 		self.cnt = self.cnt + 0.5
@@ -62,12 +78,13 @@ class Ui_MainWindow(object):
 			for i in range(0, 4):
 				self.result[i].setVisible(False)
 			self.cnt = 0
-			self.T[0].start()
-			self.timer[0].start(self.F)
+			self.contBlink(block)
+
 		else:
+			self.T[0].stop()
 			self.timer[block].stop()
-			self.setFreqResult(self.T[0].elapsed())
 			self.showBlockGrid(block)
+			#self.setFreqResult(self.T[0].elapsed())
 
 		self.menuBlinkControl()
 
@@ -102,8 +119,7 @@ class Ui_MainWindow(object):
 			self.F = constants.ONE_SEC/constants.FREQ[0]
 			self.isBlink = True
 			self.cnt = 0
-			self.T[0].start()
-			self.timer[0].start(self.F)
+			self.contBlink(0)
 
 	def showFreqControl(self, MainWindow):
 		self.setting = not self.setting
@@ -131,7 +147,8 @@ class Ui_MainWindow(object):
 	def layoutSizeVar(self):
 		# creat timer
 		self.timer.append(QTimer())
-		self.T.append(QTime())
+		self.T.append(QTimer())
+		self.ST.append(QTimer())
 
 		r = QtWidgets.QDesktopWidget().screenGeometry()
 		self.screenWidth = r.width()
@@ -282,3 +299,5 @@ class Ui_MainWindow(object):
 	def setTimer(self):
 		self.cnt = 0
 		self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
+		self.T[0].timeout.connect(functools.partial(self.suspendTime, block=constants.UPPER_LEFT))
+		self.ST[0].timeout.connect(functools.partial(self.contBlink, block=constants.UPPER_LEFT))
