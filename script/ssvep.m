@@ -1,14 +1,21 @@
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% %
-% %     
-% %
-% %
-% %
-% %
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Before using this script, you should prepare a template .xls file      %
+% called template.xls in the working directory. It will copy the         %
+% template.xls to put the output data.                                   %
+%                                                                        %
+%                                                                        %
+% This script read all raw datas (.cnt files) in the working directory.  % 
+% Next, it apply a 5~59Hz bandpass filter to all raw datas, and output   %
+% the processed datas into the corresponding .xls files(.xls filename is % 
+% same as .cnt fliename but frequency part is throw away.). For example, %
+% if it read 'sub3_6hz_sig_dot_A1_V2.cnt', then it will put the output   %
+% data in the tab '6Hz_<Channel>' of 'sub3_sig_dot_A1_V2.xls'.           % 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 
 close all;
-
+t0 = clock;
 total = 0;
 count = 0;
 listing = dir('.');
@@ -77,6 +84,7 @@ for i = 1 : length(listing)
         O1 = ps1; OZ = ps2; O2 = ps3;    % psd
         %O1 = Sx1; OZ = Sx2; O2 = Sx3;     % freq
         
+        % output data & show progress
         clc;
      
         fprintf('Progress : %f %%\n', double(count)/double(total) * 100);
@@ -127,11 +135,14 @@ for i = 1 : length(listing)
         Workbook.Save;
         % Close the workbook
         Workbooks.Close;
-
+        
     end
 end
 
+elapsedTime = etime(clock, t0);
+fprintf('Elapsed time: %fs\n', elapsedTime);
 clear all;
+
 
 
 
