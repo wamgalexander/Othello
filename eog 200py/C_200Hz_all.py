@@ -52,18 +52,16 @@ class ComportPanel(wx.Panel, wx.ItemContainer):
 		global N_PORT
 		N_PORT = len(port)
 
-		if(N_PORT == 0):
-			port.append("port unviable")
 		cpbox = wx.StaticBox(self, -1)
 		cpsizer = wx.StaticBoxSizer(cpbox, wx.VERTICAL)
 		self.com_port_text = wx.StaticText(self, -1, "Port:")
 		self.com_port_text.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, u'Consolas'))
 
 
-		self.com_port_list = wx.ListBox(self, -1,style=wx.LB_SINGLE|wx.LB_NEEDED_SB|wx.LB_HSCROLL) if(N_PORT > 1) else wx.TextCtrl(self, -1, port[0])
-		if(N_PORT > 1):
-			for item in port:
-				self.com_port_list.Append(item)
+		self.com_port_list = wx.Choice(self,choices=port) if(N_PORT > 0) else wx.Choice(self,choices=["port unaviable"])
+		if(N_PORT == 0):
+			self.com_port_list.SetSelection(0)
+			self.com_port_list.Enable(False)
 
 		self.file_text = wx.StaticText(self, -1, "File Name:")
 		self.file_text.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, u'Consolas'))
@@ -288,20 +286,10 @@ class GraphFrame(wx.Frame):
 			self.rawData[i].extend([])
 		self.offset = [0]
 
-		port_str = ""
-		if(N_PORT > 1):
-			port_str = self.comport_control.com_port_list.GetStringSelection()
-		elif(N_PORT == 1):
-			port_str = self.comport_control.com_port_list.GetValue()
-
-		if (port_str =="" or self.comport_control.file_textctrl.GetValue()==""):
+		if (self.comport_control.com_port_list.GetStringSelection() =="" or self.comport_control.file_textctrl.GetValue()==""):
 			return
 
-		if(N_PORT == 1):
-			port = port_str
-		elif(N_PORT > 1):
-			port = self.comport_control.com_port_list.GetStringSelection()
-
+		port = self.comport_control.com_port_list.GetStringSelection()
 		filename = self.comport_control.file_textctrl.GetValue()+".txt"
 
 		try:
