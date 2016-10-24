@@ -59,8 +59,8 @@ class ComportPanel(wx.Panel, wx.ItemContainer):
 
 
 		self.com_port_list = wx.Choice(self,choices=port) if(N_PORT > 0) else wx.Choice(self,choices=["port unaviable"])
+		self.com_port_list.SetSelection(0)
 		if(N_PORT == 0):
-			self.com_port_list.SetSelection(0)
 			self.com_port_list.Enable(False)
 
 		self.file_text = wx.StaticText(self, -1, "File Name:")
@@ -119,6 +119,7 @@ class ComportPanel(wx.Panel, wx.ItemContainer):
 	            result.append(port)
 	        except (SerialException):
 	            pass
+		result.reverse()
 	    return result
 
 
