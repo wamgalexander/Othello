@@ -105,7 +105,7 @@ class ComportPanel(wx.Panel, wx.ItemContainer):
 	    if sys.platform.startswith('win'):
 	        ports = ['COM%s' % (i + 1) for i in range(256)]
 	    elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
-	        ports = glob.glob('/dev/tty[A-Za-z]*')
+	        ports = glob.glob('/dev/ttyUSB[0-9]*')
 	    elif sys.platform.startswith('darwin'):
 	        ports = glob.glob('/dev/tty.*')
 	    else:
