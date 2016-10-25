@@ -245,16 +245,16 @@ class GraphFrame(wx.Frame):
 				for order in range(3):
 					self.plot_data[order].set_xdata(np.arange(0,self.showLen[0],1.0)/float(fs))
 					#print( len(np.arange(0,self.showLen[0],1.0)))
-					self.plot_data[order].set_ydata(np.array(self.rawData[order])+np.array((order * 200)))
-					#self.plot_data[order].set_ydata(np.array(self.rawData[order])+np.array((order * 255)))
+					#self.plot_data[order].set_ydata(np.array(self.rawData[order])+np.array((order * 200)))
+					self.plot_data[order].set_ydata(np.array(self.rawData[order])+np.array((order * 255)))
 					# modified by Wei (order+1)
 
 					#print( len(np.array(self.rawData[order])+np.array(order * 255)))
 			else:
 				for order in range(3):
 					self.plot_data[order].set_xdata(np.arange(self.showLen[0]-show_len,self.showLen[0],1.0)/float(fs))
-					self.plot_data[order].set_ydata(np.array(self.rawData[order][-show_len:])+np.array((order * 200)))
-					#self.plot_data[order].set_ydata(np.array(self.rawData[order][-show_len:])+np.array((order * 255)))
+					#self.plot_data[order].set_ydata(np.array(self.rawData[order][-show_len:])+np.array((order * 200)))
+					self.plot_data[order].set_ydata(np.array(self.rawData[order][-show_len:])+np.array((order * 255)))
 					# modified by Wei (order+1)
 
 			self.data_lock.release()
@@ -428,8 +428,6 @@ class Package:
 		self.lastSeq = 0
 		self.drop = 0
 		self.firstPackage = 0
-		self.seqNum = 0
-		self.seqNumTemp = 0
 
 		for i in range(3):
 			self.psgData[i].extend([0])
@@ -440,23 +438,12 @@ class Package:
 			if(self.first ==0x04): #4
 				self.seq = ord(self.ser.read())
 				self.second = ord(self.ser.read())
-				##### lost data #####
-				self.seqNumTemp = self.seq
-				##if(self.seqNum != self.seqNumTemp):
-					##print("lost data Num" + str(self.seqNumTemp))
-				if(self.seqNumTemp == 0xFF): #255
-					self.seqNum = 0
-				else:
-					self.seqNum = self.seqNumTemp + 1
-				#####    end    #####
 				if self.second == 0x56:#86
 					self.third = ord(self.ser.read())
 					if(self.third == 0x81):#129
 						self.alldata = map(ord, self.ser.read(84))
-						##print("first = " + str(self.alldata))
 						for i in range(len(self.alldata)):
 							self.alldata[i] *= 4
-						##print("second = " + str(self.alldata))
 						break
 					else:
 						self.first = self.third
@@ -467,32 +454,8 @@ class Package:
 
 		for j in range(3):
 			self.psgData[j] = self.alldata[self.dataSeq[j]::3]
-			#print("data"+str(self.psgData[j]))
 		self.dlen = self.dlen+28
 
-	# def load(self):
-	# 	self.first = ord(self.ser.read())
-	#
-	# 	while(True):
-	# 		if(self.first ==0x04): #4
-	# 			self.seq = ord(self.ser.read())
-	# 			self.second = ord(self.ser.read())
-	# 			if(self.second == 0x54):#86
-	# 				self.third = ord(self.ser.read())
-	# 				if(self.third == 0x81):#129
-	# 					self.alldata = map(ord, self.ser.read(84))
-	# 					break
-	# 				else:
-	# 					self.first = self.third
-	# 			else:
-	# 				self.first = self.second
-	# 		else:
-	# 			self.first = ord(self.ser.read())
-	#
-	# 	for j in range(3):
-	# 		self.psgData[j] = self.alldata[self.dataSeq[j]::3]
-	# 		#print("data"+str(self.psgData[j]))
-	# 	self.dlen = self.dlen+28
 
 if __name__ == '__main__':
 	logging.basicConfig(filename='test.log',
