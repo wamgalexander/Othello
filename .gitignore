@@ -2,3 +2,5 @@
 __pycache__/
 layout.py
 .[0-9]*
+*.log
+*/output.txt
