@@ -1,6 +1,6 @@
-from PyQt5 import Qt, QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QApplication, QWidget, QDesktopWidget
-from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QDesktopWidget
+from PyQt5.QtCore import pyqtSignal, QTimer
 import functools
 
 import constants
@@ -35,8 +35,16 @@ class Ui_MainWindow(object):
 	spaceHeight = 0
 	resetButtonWidth = 0
 	resetButtonHeight = 0
+	resetButtonXPos = 0
+	resetButtonYPos = 0
 	returnButtonWidth = 0
 	returnButtonHeight = 0
+	returnButtonXPos = 0
+	returnButtonYPos = 0
+	freqXPos = 0
+	freqYPos = 0
+	playerXPos = 0
+	playerYPos = 0
 
 ####### UI ########
 	def setupUi(self, MainWindow):
@@ -52,14 +60,18 @@ class Ui_MainWindow(object):
 		self.setReturnButton()
 		# freq ctrl
 		self.setFreqCtrl()
+		# player trun window
+		self.setPlayer()
 		# menubar
 		self.setMenubar(MainWindow)
 		# menu
 		self.setMenu(MainWindow)
 		# Shelter
-		self.setShelter()
+		#self.setShelter()
 		# timer
-		self.setTimer()
+		#self.setTimer()
+		#init
+		self.init()
 
 ####### Fuction #######
 ## blink ##
@@ -194,6 +206,10 @@ class Ui_MainWindow(object):
 		self.zoomInIndex = -1
 		for i in range (0, 64):
 			self.placed[i] = constants.EMPTY
+		self.drawChess(self.grid[27], constants.WHITE)
+		self.drawChess(self.grid[28], constants.BLACK)
+		self.drawChess(self.grid[36], constants.WHITE)
+		self.drawChess(self.grid[35], constants.BLACK)
 
 	def restart(self):
 		for i in range(0, 64):
@@ -204,22 +220,87 @@ class Ui_MainWindow(object):
 		self.init()
 
 	def placeChess(self, grid):
-		if(self.placed[int(grid.objectName())] != constants.EMPTY):
+		pos = int(grid.objectName())
+		if(self.placed[pos] != constants.EMPTY):
 			return
-		if self.playerColor == constants.WHITE:
+		if(self.isValidMove(pos)):
+			self.drawChess(grid, self.playerColor)
+			self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
+			if self.playerColor == constants.WHITE:
+				self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
+			else:
+				self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
+
+	def drawChess(self, grid, color):
+		if color == constants.WHITE:
 			grid.setIcon(QtGui.QIcon("./src/white.png"))
-			grid.setText("")
-			self.placed[int(grid.objectName())] = constants.WHITE
 		else:
 			grid.setIcon(QtGui.QIcon("./src/black.png"))
-			grid.setText("")
-			self.placed[int(grid.objectName())] = constants.BLACK
-		self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
+
+		grid.setText("")
+		self.placed[int(grid.objectName())] = color
 
 	def hideAllGrids(self):
 		for i in range(0, 64):
 			self.grid[i].setVisible(False)
 
+	def isOnBoard(self, x, y):
+		fact = False
+		if(0 <= x and x <= 7 and 0 <= y and y <= 7):
+			fact = True
+		return fact
+
+	def reverseChess(self, pos_start):
+		reverse_pos = []
+		x_start, y_start = int(pos_start%8), int(pos_start/8)
+		other = constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
+		move_dir = [ [0, 1], [1, 1], [1, 0], [1, -1], [0, -1], [-1, -1], [-1, 0], [-1, 1] ]
+		for x_dir, y_dir in move_dir:
+			x, y = x_start, y_start
+			x += x_dir
+			y += y_dir
+			if (self.isOnBoard(x, y) and self.placed[x + y * 8] == other):
+				x += x_dir
+				y += y_dir
+				if not self.isOnBoard(x, y):
+					continue
+
+				while self.placed[x + y * 8] == other:
+					x += x_dir
+					y += y_dir
+					if not self.isOnBoard(x, y):
+						break
+
+				if not self.isOnBoard(x, y):
+					continue
+
+				if self.placed[x + y * 8] == self.playerColor:
+					while True:
+						x -= x_dir
+						y -= y_dir
+						if x == x_start and y == y_start:
+						    break
+						reverse_pos.append(x + y * 8)
+
+		for pos in reverse_pos:
+			self.drawChess(self.grid[pos], self.playerColor)
+
+		return reverse_pos
+
+	def isValidMove(self, pos_start):
+		if(not self.isOnBoard(int(pos_start%8), int(pos_start/8)) or self.placed[pos_start] != constants.EMPTY):
+			return False
+
+		self.placed[pos_start] = self.playerColor
+
+		reverse_pos = self.reverseChess(pos_start)
+
+		self.placed[pos_start] = constants.EMPTY
+
+		if len(reverse_pos) == 0:
+			return False
+
+		return True
 ## freq ##
 	def editFreq(self):
 		for i in range(0, 4):
@@ -282,20 +363,39 @@ class Ui_MainWindow(object):
 		r = QtWidgets.QDesktopWidget().screenGeometry()
 		self.screenWidth = r.width()
 		self.screenHeight = r.height()
-		constants.XSPACE = r.width() * (40/840)
-		constants.YSPACE = r.height() * (40/680)
+		# constants.XSPACE = r.width() * (40/840)
+		# constants.YSPACE = r.height() * (40/680)
+		constants.XSPACE = 0
+		constants.YSPACE = 0
+
 		self.spaceWidth = self.screenWidth * (6/840)
 		self.spaceHeight = self.screenHeight * (8/680)
+
 		self.buttonWidth = self.screenWidth * (50/840)
 		self.buttonHeight = self.screenHeight * (60/680)
+
 		self.resetButtonWidth = self.screenWidth * (110/840)
 		self.resetButtonHeight = self.screenHeight * (130/680)
+		self.resetButtonXPos = self.screenWidth*(670/840) + constants.XSPACE
+		self.resetButtonYPos = self.screenHeight*(70/680) + constants.YSPACE
+
 		self.returnButtonWidth = self.screenWidth * (110/840)
 		self.returnButtonHeight = self.screenHeight * (130/680)
+		self.returnButtonXPos = self.screenWidth*(670/840) + constants.XSPACE
+		self.returnButtonYPos = self.screenHeight*(250/680) + constants.YSPACE
+
+		self.freqXPos = self.screenWidth*(670/840)+constants.XSPACE
+		self.freqYPos = self.screenHeight*(470/680)
+
+		self.playerXPos = self.screenWidth*(670/840)+constants.XSPACE
+		self.playerYPos = self.screenHeight*(470/680)
+
 		self.boardWidth = self.screenWidth * (670/840)
 		self.boardHeight = self.screenHeight
+
 		self.startPosX = self.screenWidth * (1/7)
 		self.startPosY = self.screenHeight * (15/680)
+
 
 	def center(self):
 		window = self.frameGeometry()
@@ -339,8 +439,8 @@ class Ui_MainWindow(object):
 				self.grid[i].setFocusPolicy(QtCore.Qt.NoFocus)
 
 	def setRefreshButton(self):
-		XPos = self.screenWidth*(670/840) + constants.XSPACE
-		YPos = self.screenHeight*(70/680) + constants.YSPACE
+		XPos = self.resetButtonXPos
+		YPos = self.resetButtonYPos
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[64].setObjectName("refresh")
 		self.grid[64].setGeometry(QtCore.QRect(XPos, YPos, self.resetButtonWidth, self.resetButtonHeight))
@@ -354,8 +454,8 @@ class Ui_MainWindow(object):
 									"background-color: rgb(19, 146, 59);")
 
 	def setReturnButton(self):
-		XPos = self.screenWidth*(670/840) + constants.XSPACE
-		YPos = self.screenHeight*(250/680) + constants.YSPACE
+		XPos = self.returnButtonXPos
+		YPos = self.returnButtonYPos
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[65].setObjectName("return")
 		#self.grid[65].setText("")
@@ -371,8 +471,8 @@ class Ui_MainWindow(object):
 
 	def setFreqCtrl(self):
 		# freq set button
-		XPos = self.screenWidth*(670/840)+constants.XSPACE
-		YPos = self.screenHeight*(470/680)
+		XPos = self.freqXPos
+		YPos = self.freqYPos
 		W = self.screenWidth*(90/840)
 		H = self.screenHeight*(35/680)
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
@@ -389,6 +489,24 @@ class Ui_MainWindow(object):
 								   "selection-color: rgb(128, 255, 0);"
 								   "border-color: rgb(102, 102, 255);"
 								   "font: 14pt \"Courier\";")
+
+	# player turn window
+	def setPlayer(self):
+		XPos = self.playerXPos
+		YPos = self.playerYPos
+		self.grid.append(QRightClickButton(self.centralwidget))
+		self.grid[67].setObjectName("Player")
+		self.grid[67].setGeometry(QtCore.QRect(XPos, YPos, self.resetButtonWidth, self.resetButtonHeight))
+		self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
+		self.grid[67].setIconSize(QtCore.QSize(55, 55))
+		self.grid[67].setEnabled(True)
+		self.grid[67].setAutoDefault(False)
+		self.grid[67].setFocusPolicy(QtCore.Qt.NoFocus)
+		self.grid[67].clicked.connect(self.restart)
+		self.grid[67].setStyleSheet("border-color: rgb(255, 255, 255);"
+									"background-color: rgb(19, 146, 59);")
+
+
 
 		# freq ctrl
 		for i in range(0, 4):

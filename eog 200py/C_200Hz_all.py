@@ -222,7 +222,7 @@ class GraphFrame(wx.Frame):
 		""" Redraws the plot
 		"""
 		show_len = 7500
-		fs = 200
+		fs = 500
 		points = 15*fs
 		if self.data_lock.acquire():
 			##ymin = 800
@@ -354,10 +354,14 @@ class SerialThread (threading.Thread):
 			if self.data_lock.acquire():
 				for i in range(3):
 					##self.rawData[i].extend(packet.psgData[i])
-					c = 1
-					#list_data = packet.psgData[i]
+					#if(i == 2):
+					#	c = 600
+					#else:
+					#	c = 0
+
+					list_data = packet.psgData[i]
 					#list_data = (np.array(packet.psgData[i])*c).tolist()
-					list_data = (c * np.array(self.butter_bandpass_filter(packet.psgData[i], 5, 55, 200, 5))).tolist()
+					#list_data = (c * np.array(self.butter_bandpass_filter(packet.psgData[i], 5, 55, 500, 5))).tolist()
 					self.rawData[i].extend(list_data)
 
 				self.dataLen[0] = self.dataLen[0] + 28
