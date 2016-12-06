@@ -218,22 +218,25 @@ class Ui_MainWindow(object):
 		modify_time = self.modification_date('.config')
 		if(self.last_time != modify_time):
 			self.cmd = open('.config', 'r').read().splitlines()
-
+			act = False
 			if(self.layoutmode == 'left'):
 				c = self.cmd[1].split()
 				self.suspend = self.delay if c[0] == '2' else 0
+				act = True if c[0] != '0' else False
 				self.block_type = c[1]
 				constants.FREQ[0] = int(c[2])
 				self.left()
 			elif(self.layoutmode == 'normal'):
 				c = self.cmd[1].split()
 				self.suspend = self.delay if c[0] == '2' else 0
+				act = True if c[0] != '0' else False
 				self.block_type = c[1]
 				constants.FREQ[0] = int(c[2])
 				self.left()
 			elif(self.layoutmode == 'right'):
 				c = self.cmd[2].split()
 				self.suspend = self.delay if c[0] == '2' else 0
+				act = True if c[0] != '0' else False
 				self.block_type = c[1]
 				constants.FREQ[0] = int(c[2])
 				self.right()
@@ -249,10 +252,8 @@ class Ui_MainWindow(object):
 					self.cross[0].setVisible(False)
 					for i in range(0, 16):
 						self.cycle[i].setVisible(True)
-			#self.isBlink = True if self.cmd[0] != '0' else False
-			#print(self.isBlink)
 
-			if(self.cmd[0] != '0'):
+			if(self.cmd[0] != '0' and act):
 				self.isBlink = True
 				self.timer[0].start(self.F)
 			else:
@@ -282,7 +283,7 @@ class Ui_MainWindow(object):
 
 	def setMainWindow(self, MainWindow):
 		self.checkcmd[0].start(self.F)
-		if(len(self.cmd) == 3):
+		if(self.layoutmode != 'normal'):
 			self.screenWidth = self.screenWidth / 2
 			self.startPosX = self.startPosX / 3
 			self.freqButtonXPos = self.freqButtonXPos / 2
