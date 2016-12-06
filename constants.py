@@ -25,7 +25,8 @@ BLACK = 1
 WHITE = 2
 ONE_SEC = 1000/2
 
-FREQ = [10, 20, 30, 40]
+#FREQ = [10, 20, 30, 40]
+FREQ = [5, 20, 30, 40]
 
 MAIN_BLOCK = [0, 4, 32, 36]
 ZOOM_IN1_BLOCK = [0, 2, 16, 18]

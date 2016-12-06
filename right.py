@@ -1,8 +1,8 @@
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QDesktopWidget
 from PyQt5.QtCore import pyqtSignal, QTimer
 import functools
-
+import sys # We need sys so that we can pass argv to QApplication
 import constants
 
 class QRightClickButton(QtWidgets.QPushButton):
@@ -17,12 +17,19 @@ class Ui_MainWindow(object):
 	setting = False
 	timer = []
 	cycle = [] * 4
+	cross = []
 	text = []
 	grid = []
 	T = []
 	ST = []
+	cmd = []
+	block_type = 'b'
 	cont = 5000
-	suspend = 2000
+	suspend = 0
+	delay = 2000
+#	layoutmode = 'left'
+#	layoutmode = 'normal'
+	layoutmode = 'right'
 
 	F = constants.ONE_SEC/constants.FREQ[0]
 	isBlink = False
@@ -35,17 +42,38 @@ class Ui_MainWindow(object):
 	buttonHeight = 0
 	spaceWidth = 10
 	spaceHeight = 10
+	crossWidth = 0
+	crossHeight = 0
 
+	freqButtonXPos = 0
+	freqButtonYPos = 0
+	freqButtonWidth = 0
+	freqButtonHeight = 0
+
+	freqCtrlXPos = 0
+	freqCtrlYPos = 0
+	freqCtrlWidth = 0
+	freqButtonHeight = 0
+
+	crossXPos = 0
+	crossYPos = 0
 ####### UI ########
 	def setupUi(self, MainWindow):
 		# set layout variable
 		self.layoutSizeVar()
+		# read .config
+		self.layoutMode()
 		# main window
 		self.setMainWindow(MainWindow)
 		# freq ctrl
 		self.setFreqCtrl()
-		# cycle
-		self.setCycle()
+
+		if(self.block_type == 'b'):
+			# cross
+			self.setCross()
+		elif(self.block_type == 'c'):
+			# cycle
+			self.setCycle()
 		# menubar
 		self.setMenubar(MainWindow)
 		# menu
@@ -72,19 +100,25 @@ class Ui_MainWindow(object):
 		running = [5, 6, 10, 9]
 		index = running[self.lastBlink]
 
-		V = self.cycle[index].isVisible()
-		self.cycle[index].setVisible(not V)
+		if(self.block_type == 'b'):
+			V = self.cross[block].isVisible()
+			self.cnt = self.cnt + 0.5
+			self.cross[block].setVisible(not V)
+		elif(self.block_type == 'c'):
+			V = self.cycle[index].isVisible()
+			self.cycle[index].setVisible(not V)
 
-		if not V:
-			self.lastBlink = (self.lastBlink + 1) % 4
+			if not V:
+				self.lastBlink = (self.lastBlink + 1) % 4
 
 
 	def blinkControl(self, block, allSwitch = False):
 		self.isBlink = not self.isBlink
 
 		if(self.isBlink):
-			for i in range(0, 16):
-				self.cycle[i].setVisible(True)
+			if(self.block_type == 'c'):
+					for i in range(0, 16):
+						self.cycle[i].setVisible(True)
 			self.contBlink(block)
 		else:
 			self.T[0].stop()
@@ -98,13 +132,21 @@ class Ui_MainWindow(object):
 																		   "Upper-Left:"  + ("ON" if self.timer[constants.UPPER_LEFT].isActive() else "OFF")))
 ## Block ##
 	def showBlockGrid(self, block):
-		for i in range(0, 4):
-			self.cycle[i].setVisible(True)
-
+		if(self.block_type == 'b'):
+			self.cross[block].setVisible(True)
+		elif(self.block_type == 'c'):
+			for i in range(0, 4):
+				self.cycle[i].setVisible(True)
 
 	def gridColor(self, block):
-		self.cycle[block].setStyleSheet("background-color:" + constants.COLOR[0] + ";")
+		if(self.block_type == 'b'):
+			self.cross[block].setStyleSheet("background-color:" + constants.COLOR[block] + ";")
+		elif(self.block_type == 'c'):
+			self.cycle[block].setStyleSheet("background-color:" + constants.COLOR[0] + ";")
 
+## cross ##
+	def setCrossPos(self, block, XPos, YPos):
+		self.cross[block].setGeometry(QtCore.QRect(XPos, YPos, self.crossWidth, self.crossHeight))
 ## cycle ##
 	def setCyclePos(self, block, XPos, YPos):
 		self.cycle[block].setGeometry(QtCore.QRect(XPos, YPos, self.buttonWidth, self.buttonHeight))
@@ -149,6 +191,7 @@ class Ui_MainWindow(object):
 		self.ST.append(QTimer())
 
 		r = QtWidgets.QDesktopWidget().screenGeometry()
+
 		self.screenWidth = r.width()
 		self.screenHeight = r.height()
 		self.buttonWidth = self.screenWidth * (50/840)
@@ -158,13 +201,69 @@ class Ui_MainWindow(object):
 		self.startPosX = self.screenWidth * (314/840)
 		self.startPosY = self.screenHeight * (180/680)
 
+		self.crossWidth = self.screenWidth * (12/840)
+		self.crossHeight = self.screenHeight * (16/680)
+
+		self.freqButtonXPos = self.screenWidth*(670/840)
+		self.freqButtonYPos = self.screenHeight*(470/680)
+		self.freqButtonWidth = self.screenWidth*(90/840)
+		self.freqButtonHeight = self.screenHeight*(35/680)
+
+		self.freqCtrlXPos = self.screenWidth*(670/840)
+		self.freqCtrlYPos = self.screenHeight*(515/680)
+		self.freqCtrlWidth = self.screenWidth*(40/840)
+		self.freqCtrlHeight = self.screenHeight*(40/680)
+
+		self.crossXPos = self.screenWidth * (414/840)
+		self.crossYPos = self.screenHeight * (332/680)
+
+	def layoutMode(self):
+		self.cmd = open('.config', 'r').read().splitlines()
+
+		if(self.layoutmode == 'left'):
+			c = self.cmd[0].split()
+			self.suspend = self.delay if c[0] == '2' else 0
+			self.block_type = c[1]
+			constants.FREQ[0] = int(c[2])
+			self.left()
+		elif(self.layoutmode == 'normal'):
+			c = self.cmd[0].split()
+			self.suspend = self.delay if c[0] == '2' else 0
+			self.block_type = c[1]
+			constants.FREQ[0] = int(c[2])
+			self.left()
+		elif(self.layoutmode == 'right'):
+			c = self.cmd[1].split()
+			self.suspend = self.delay if c[0] == '2' else 0
+			self.block_type = c[1]
+			constants.FREQ[0] = int(c[2])
+			self.right()
+		self.F = constants.ONE_SEC/constants.FREQ[0]
+
 	def center(self):
 		window = self.frameGeometry()
 		center = QDesktopWidget().availableGeometry().center()
 		window.moveCenter(center)
 		self.move(window.topLeft())
 
+	def left(self):
+		window = self.frameGeometry()
+		window.moveLeft(0)
+		self.move(window.topLeft())
+
+	def right(self):
+		window = self.frameGeometry()
+		window.moveRight(self.screenWidth)
+		self.move(window.topRight())
+
 	def setMainWindow(self, MainWindow):
+		if(len(self.cmd) == 2):
+			self.screenWidth = self.screenWidth / 2
+			self.startPosX = self.startPosX / 3
+			self.freqButtonXPos = self.freqButtonXPos / 2
+			self.freqCtrlXPos = self.freqCtrlXPos / 2
+			self.crossXPos = self.crossXPos / 2
+
 		MainWindow.setObjectName("MainWindow")
 		MainWindow.resize(self.screenWidth, self.screenHeight)
 		MainWindow.setMinimumSize(QtCore.QSize(self.screenWidth, self.screenHeight))
@@ -173,14 +272,13 @@ class Ui_MainWindow(object):
 		self.centralwidget = QtWidgets.QWidget(MainWindow)
 		self.centralwidget.setAutoFillBackground(False)
 		self.centralwidget.setObjectName("centralwidget")
-		self.center()
 
 	def setFreqCtrl(self):
 		# freq set button
-		XPos = self.screenWidth*(670/840)
-		YPos = self.screenHeight*(470/680)
-		W = self.screenWidth*(90/840)
-		H = self.screenHeight*(35/680)
+		XPos = self.freqButtonXPos
+		YPos = self.freqButtonYPos
+		W = self.freqButtonWidth
+		H = self.freqButtonHeight
 		self.grid.append(QtWidgets.QPushButton(self.centralwidget))
 		self.grid[0].setObjectName("set")
 		self.grid[0].setText("Set")
@@ -196,10 +294,10 @@ class Ui_MainWindow(object):
 								   "font: 14pt \"Courier\";")
 
 		# freq ctrl
-		XPos = self.screenWidth*(670/840)
-		YPos = self.screenHeight*(515/680)
-		W = self.screenWidth*(40/840)
-		H = self.screenHeight*(40/680)
+		XPos = self.freqCtrlXPos
+		YPos = self.freqCtrlYPos
+		W = self.freqCtrlWidth
+		H = self.freqCtrlHeight
 		self.text.append(QtWidgets.QTextEdit(self.centralwidget))
 		self.text[0].setObjectName(str(0))
 		self.text[0].setText(str(constants.FREQ[0]))
@@ -210,6 +308,17 @@ class Ui_MainWindow(object):
 		self.text[0].setStyleSheet("background-color: " + constants.COLOR[0] +";"
 								   "border-color: rgb(102, 102, 255);"
 								   "font: 14pt \"Courier\";")
+
+	def setCross(self):
+		self.cross.append(QRightClickButton(self.centralwidget))
+		XPos = self.crossXPos
+		YPos = self.crossYPos
+		self.setCrossPos(0, XPos, YPos)
+		self.gridColor(0)
+		self.cross[0].setObjectName(str(0))
+		self.cross[0].setEnabled(False)
+		self.cross[0].setFocusPolicy(QtCore.Qt.NoFocus)
+
 
 	def setCycle(self):
 		for y in range(0, 4):
@@ -280,3 +389,24 @@ class Ui_MainWindow(object):
 		self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
 		self.T[0].timeout.connect(functools.partial(self.suspendTime, block=constants.UPPER_LEFT))
 		self.ST[0].timeout.connect(functools.partial(self.contBlink, block=constants.UPPER_LEFT))
+
+class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
+    def __init__(self):
+        # Explaining super is out of the scope of this article
+        # So please google it if you're not familar with it
+        # Simple reason why we use it here is that it allows us to
+        # access variables, methods etc in the design.py file
+        super(self.__class__, self).__init__()
+        self.setupUi(self)  # This is defined in design.py file automatically
+                            # It sets up layout and widgets that are defined
+
+def main():
+    app = QtWidgets.QApplication(sys.argv)  # A new instance of QApplication
+    form = ExampleApp()                 # We set the form to be our ExampleApp (design)
+    form.show()                         # Show the form
+    app.exec_()                         # and execute the app
+
+
+
+if __name__ == '__main__':              # if we're running file directly and not importing it
+    main()                              # run the main function
