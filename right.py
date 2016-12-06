@@ -4,6 +4,8 @@ from PyQt5.QtCore import pyqtSignal, QTimer
 import functools
 import sys # We need sys so that we can pass argv to QApplication
 import constants
+import os
+import datetime
 
 class QRightClickButton(QtWidgets.QPushButton):
 	def __init__(self, parent):
@@ -13,9 +15,11 @@ class QRightClickButton(QtWidgets.QPushButton):
 	rightClicked = pyqtSignal()
 
 class Ui_MainWindow(object):
+
 ####### declare variable #######
 	setting = False
 	timer = []
+	checkcmd = []
 	cycle = [] * 4
 	cross = []
 	text = []
@@ -27,6 +31,7 @@ class Ui_MainWindow(object):
 	cont = 5000
 	suspend = 0
 	delay = 2000
+	last_time = ''
 #	layoutmode = 'left'
 #	layoutmode = 'normal'
 	layoutmode = 'right'
@@ -67,13 +72,10 @@ class Ui_MainWindow(object):
 		self.setMainWindow(MainWindow)
 		# freq ctrl
 		self.setFreqCtrl()
-
-		if(self.block_type == 'b'):
-			# cross
-			self.setCross()
-		elif(self.block_type == 'c'):
-			# cycle
-			self.setCycle()
+		# cross
+		self.setCross()
+		# cycle
+		self.setCycle()
 		# menubar
 		self.setMenubar(MainWindow)
 		# menu
@@ -94,17 +96,17 @@ class Ui_MainWindow(object):
 		self.isBlink = True
 		self.T[0].start(self.cont)
 		self.timer[block].start(self.F)
+		self.checkcmd[0].start(self.F)
 		self.ST[0].stop()
 
 	def blink(self, block):
-		running = [5, 6, 10, 9]
-		index = running[self.lastBlink]
-
 		if(self.block_type == 'b'):
-			V = self.cross[block].isVisible()
+			V = self.cross[0].isVisible()
 			self.cnt = self.cnt + 0.5
 			self.cross[block].setVisible(not V)
 		elif(self.block_type == 'c'):
+			running = [5, 6, 10, 9]
+			index = running[self.lastBlink]
 			V = self.cycle[index].isVisible()
 			self.cycle[index].setVisible(not V)
 
@@ -114,7 +116,6 @@ class Ui_MainWindow(object):
 
 	def blinkControl(self, block, allSwitch = False):
 		self.isBlink = not self.isBlink
-
 		if(self.isBlink):
 			if(self.block_type == 'c'):
 					for i in range(0, 16):
@@ -123,6 +124,7 @@ class Ui_MainWindow(object):
 		else:
 			self.T[0].stop()
 			self.timer[block].stop()
+			self.checkcmd[0].stop()
 			self.showBlockGrid(block)
 
 		self.menuBlinkControl()
@@ -137,12 +139,6 @@ class Ui_MainWindow(object):
 		elif(self.block_type == 'c'):
 			for i in range(0, 4):
 				self.cycle[i].setVisible(True)
-
-	def gridColor(self, block):
-		if(self.block_type == 'b'):
-			self.cross[block].setStyleSheet("background-color:" + constants.COLOR[block] + ";")
-		elif(self.block_type == 'c'):
-			self.cycle[block].setStyleSheet("background-color:" + constants.COLOR[0] + ";")
 
 ## cross ##
 	def setCrossPos(self, block, XPos, YPos):
@@ -187,6 +183,7 @@ class Ui_MainWindow(object):
 	def layoutSizeVar(self):
 		# creat timer
 		self.timer.append(QTimer())
+		self.checkcmd.append(QTimer())
 		self.T.append(QTimer())
 		self.ST.append(QTimer())
 
@@ -218,27 +215,54 @@ class Ui_MainWindow(object):
 		self.crossYPos = self.screenHeight * (332/680)
 
 	def layoutMode(self):
-		self.cmd = open('.config', 'r').read().splitlines()
+		modify_time = self.modification_date('.config')
+		if(self.last_time != modify_time):
+			self.cmd = open('.config', 'r').read().splitlines()
 
-		if(self.layoutmode == 'left'):
-			c = self.cmd[0].split()
-			self.suspend = self.delay if c[0] == '2' else 0
-			self.block_type = c[1]
-			constants.FREQ[0] = int(c[2])
-			self.left()
-		elif(self.layoutmode == 'normal'):
-			c = self.cmd[0].split()
-			self.suspend = self.delay if c[0] == '2' else 0
-			self.block_type = c[1]
-			constants.FREQ[0] = int(c[2])
-			self.left()
-		elif(self.layoutmode == 'right'):
-			c = self.cmd[1].split()
-			self.suspend = self.delay if c[0] == '2' else 0
-			self.block_type = c[1]
-			constants.FREQ[0] = int(c[2])
-			self.right()
-		self.F = constants.ONE_SEC/constants.FREQ[0]
+			if(self.layoutmode == 'left'):
+				c = self.cmd[1].split()
+				self.suspend = self.delay if c[0] == '2' else 0
+				self.block_type = c[1]
+				constants.FREQ[0] = int(c[2])
+				self.left()
+			elif(self.layoutmode == 'normal'):
+				c = self.cmd[1].split()
+				self.suspend = self.delay if c[0] == '2' else 0
+				self.block_type = c[1]
+				constants.FREQ[0] = int(c[2])
+				self.left()
+			elif(self.layoutmode == 'right'):
+				c = self.cmd[2].split()
+				self.suspend = self.delay if c[0] == '2' else 0
+				self.block_type = c[1]
+				constants.FREQ[0] = int(c[2])
+				self.right()
+			self.F = constants.ONE_SEC/constants.FREQ[0]
+
+			if(self.last_time != ''):
+				self.text[0].setText(str(constants.FREQ[0]))
+				if(self.block_type == 'b'):
+					self.cross[0].setVisible(True)
+					for i in range(0, 16):
+						self.cycle[i].setVisible(False)
+				elif(self.block_type == 'c'):
+					self.cross[0].setVisible(False)
+					for i in range(0, 16):
+						self.cycle[i].setVisible(True)
+			#self.isBlink = True if self.cmd[0] != '0' else False
+			#print(self.isBlink)
+
+			if(self.cmd[0] != '0'):
+				self.isBlink = True
+				self.timer[0].start(self.F)
+			else:
+				self.isBlink = False
+				self.timer[0].stop()
+				self.T[0].stop()
+				self.ST[0].stop()
+			self.last_time = modify_time
+			print(self.last_time)
+
 
 	def center(self):
 		window = self.frameGeometry()
@@ -257,7 +281,8 @@ class Ui_MainWindow(object):
 		self.move(window.topRight())
 
 	def setMainWindow(self, MainWindow):
-		if(len(self.cmd) == 2):
+		self.checkcmd[0].start(self.F)
+		if(len(self.cmd) == 3):
 			self.screenWidth = self.screenWidth / 2
 			self.startPosX = self.startPosX / 3
 			self.freqButtonXPos = self.freqButtonXPos / 2
@@ -314,10 +339,12 @@ class Ui_MainWindow(object):
 		XPos = self.crossXPos
 		YPos = self.crossYPos
 		self.setCrossPos(0, XPos, YPos)
-		self.gridColor(0)
+		self.cross[0].setStyleSheet("background-color:" + constants.COLOR[0] + ";")
 		self.cross[0].setObjectName(str(0))
 		self.cross[0].setEnabled(False)
 		self.cross[0].setFocusPolicy(QtCore.Qt.NoFocus)
+		if(self.block_type != 'b'):
+			self.cross[0].setVisible(False)
 
 
 	def setCycle(self):
@@ -328,10 +355,13 @@ class Ui_MainWindow(object):
 				Xpos = self.startPosX + x * (self.buttonWidth+self.spaceWidth)
 				Ypos = self.startPosY + y * (self.buttonHeight+self.spaceHeight)
 				self.setCyclePos(i, Xpos, Ypos)
-				self.gridColor(i)
+				self.cycle[i].setStyleSheet("background-color:" + constants.COLOR[0] + ";")
+				self.cycle[i].setStyleSheet("background-color:" + constants.COLOR[0] + ";")
 				self.cycle[i].setObjectName(str(i))
 				self.cycle[i].setEnabled(False)
 				self.cycle[i].setFocusPolicy(QtCore.Qt.NoFocus)
+				if(self.block_type != 'c'):
+					self.cycle[i].setVisible(False)
 
 	def setMenubar(self, MainWindow):
 		MainWindow.setCentralWidget(self.centralwidget)
@@ -387,10 +417,15 @@ class Ui_MainWindow(object):
 	def setTimer(self):
 		self.cnt = 0
 		self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
+		self.checkcmd[0].timeout.connect(self.layoutMode)
 		self.T[0].timeout.connect(functools.partial(self.suspendTime, block=constants.UPPER_LEFT))
 		self.ST[0].timeout.connect(functools.partial(self.contBlink, block=constants.UPPER_LEFT))
 
-class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
+	def modification_date(self,filename):
+	    t = os.path.getmtime(filename)
+	    return datetime.datetime.fromtimestamp(t)
+
+class App(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
         # Explaining super is out of the scope of this article
         # So please google it if you're not familar with it
@@ -402,7 +437,7 @@ class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
 
 def main():
     app = QtWidgets.QApplication(sys.argv)  # A new instance of QApplication
-    form = ExampleApp()                 # We set the form to be our ExampleApp (design)
+    form = App()                 # We set the form to be our App (design)
     form.show()                         # Show the form
     app.exec_()                         # and execute the app
 
