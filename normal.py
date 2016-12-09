@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
 	def setupUi(self, MainWindow):
 		# set layout variable
 		self.layoutSizeVar()
-		# read .config
+		# read config.txt
 		self.layoutMode()
 		# main window
 		self.setMainWindow(MainWindow)
@@ -215,9 +215,9 @@ class Ui_MainWindow(object):
 		self.crossYPos = self.screenHeight * (332/680)
 
 	def layoutMode(self):
-		modify_time = self.modification_date('.config')
+		modify_time = self.modification_date('config.txt')
 		if(self.last_time != modify_time):
-			self.cmd = open('.config', 'r').read().splitlines()
+			self.cmd = open('config.txt', 'r').read().splitlines()
 			act = False
 			if(self.layoutmode == 'left'):
 				c = self.cmd[1].split()
