@@ -3,8 +3,6 @@ import numpy as np
 import sys
 from scipy.signal import butter, lfilter
 import glob, os, math, random
-from builtins import range
-from io import open
 
 FS = 500
 NFFT = 500
@@ -67,6 +65,8 @@ def load_all_data():
 		label = get_data_label(file)
 		data = split_data(data, label)
 		data_list = np.concatenate((data_list, data), axis = 0)
+
+
 
 	# remove header
 	data_list = np.delete(data_list, 0, axis = 0)
@@ -253,23 +253,8 @@ def cartesian(arrays, out=None):
 			out[j*m:(j+1)*m,1:] = out[0:m,1:]
 	return out
 
-data = load_signal_data(sys.argv[1])
-setting = np.load("nn_setting.npy")
-features_max = np.load("nn_features_max.npy")
-features_min = np.load("nn_features_min.npy")
-Y = nearest_neighbor_predict(data, setting, features_max, features_min)
-Y = Y.astype(int)
-
-score = np.zeros(CLASS_NUM)
-for i in range(0, CLASS_NUM):
-	score[i] = len(Y[Y == i])
-
-mode_num = score[score == np.max(score)]
-if (len(mode_num) == 1):
-	result = np.argmax(score)
-else:
-	result = 0
-
-f = open("result.txt", "w")
-f.write(unicode(result))    # unicode, not bytes
-f.close()
+data = load_all_data()
+setting, features_max, features_min =nearest_neighbor_train(data)
+np.save("nn_setting.npy", setting)
+np.save("nn_features_max.npy", features_max)
+np.save("nn_features_min.npy", features_min)
