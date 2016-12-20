@@ -6,6 +6,8 @@ import sys
 import constants
 import os
 import datetime
+import numpy as np
+import math
 
 
 class QRightClickButton(QtWidgets.QPushButton):
@@ -354,8 +356,6 @@ class Ui_MainWindow(object):
 				if(self.isValidMove(pos, False)):
 					self.validMoveList.append(pos)
 
-
-
 		L = range(0, int(len(self.validMoveList)/2))
 		R = range(int(len(self.validMoveList)/2), len(self.validMoveList))
 
@@ -377,19 +377,116 @@ class Ui_MainWindow(object):
 
 		return len(self.validMoveList)
 
+	def SplitCheck(self):
+			self.current = self.validMoveList.copy()
+			for pos in self.current:
+				self.grid[pos].setStyleSheet("background-color:"+ constants.COLOR[1] +";")
+				self.grid[pos].setText("")
+
+			if(len(self.curMove) > 1):
+				self.grid[self.curMove[-2]].setStyleSheet("background-color:"+ constants.COLOR[1] +";")
+
+			if(len(self.curMove) > 0):
+				self.grid[self.curMove[-1]].setStyleSheet("background-color:"+ constants.COLOR[0] +";")
+
+			self.validMoveList = []
+			for x in range(0, 8):
+				for y in range(0, 8):
+					pos = x + y * 8
+					if(self.isValidMove(pos, False)):
+						self.validMoveList.append(pos)
+
+			split_list = self.split_by_binary_serach(self.validMoveList, self.curCmd)
+			if(len(self.curCmd) > 0 and self.curCmd[-1] == "X"):
+				return split_list[0]
+
+			L = range(0, int(len(split_list)/2))
+			R = range(int(len(split_list)/2), len(split_list))
+
+			for i in L:
+				pos = split_list[i]
+				self.grid[pos].setStyleSheet("border-color: rgb(255, 255, 255);"
+											"font: 550 40pt \"Helvetica\";"
+											"color: white;"
+											"background-color:"+ constants.COLOR[2] +";")
+				self.grid[pos].setText(str(i + 1))
+
+			for i in R:
+				pos = split_list[i]
+				self.grid[pos].setStyleSheet("border-color: rgb(255, 255, 255);"
+											"font: 550 40pt \"Helvetica\";"
+											"color: black;"
+											"background-color:"+ constants.COLOR[3] +";")
+				self.grid[pos].setText(str(i + 1))
+
+			return len(self.validMoveList)
+
+	def split_by_binary_serach(self, target, commands):
+		split_list = list(target)
+		X_index = np.where(np.array(commands)=="X")
+
+	    # cut off by "X"
+		if len(X_index[0]) > 0:
+			if X_index[0][-1] == len(commands) - 1:
+				return split_list
+			valid_commands = list(commands[X_index[0][-1]+1:])
+		else:
+			valid_commands = list(commands)
+
+		for item in valid_commands:
+			if len(split_list) == 1:
+				commands.append("X")
+				break
+			index = math.floor(len(split_list)/2)
+			if item == "2":
+				split_list = split_list[:index]
+			elif item == "3":
+				split_list = split_list[index:]
+
+			if len(split_list) == 1:
+				continue
+
+		return split_list
+
+	# commands = ["3", "2", "X", "2", "3", "X", "2", "2", "2"]
+	# print (split_by_binary_serach([1,2,3,4,5,6,7,8], commands))
+	# print (commands)
+
 	def modification_date(self,filename):
 	    t = os.path.getmtime(filename)
 	    return datetime.datetime.fromtimestamp(t)
 
-	def getComand(self):
+	def getCommand(self):
 		t = self.modification_date('chess.txt')
 		if(self.curTime != t):
 			self.curTime = t
 			f = open('chess.txt', 'r')
 			cmd = f.read().splitlines()
 			if(len(cmd)>0):
-				self.curCmd.append(cmd[-1])
-				print('7', self.curCmd)
+				if(cmd[-1] == "0"):
+					pass
+				elif(cmd[-1] == "1"):
+					self.CommandRevert()
+				else:
+					self.curCmd.append(cmd[-1])
+					pos = self.SplitCheck()
+					print(self.curCmd)
+					if(len(self.curCmd) > 0 and self.curCmd[-1] == "X"):
+						self.placeChess(self.grid[pos])
+
+	def CommandRevert(self):
+		if (len(self.curCmd) > 0 and self.curCmd[-1] == "X"):
+			self.curCmd.pop()
+			self.BackToCurMove()
+			self.curCmd.pop()
+
+			self.SplitCheck()
+			print(self.curCmd)
+		else:
+			if (len(self.curCmd) > 0):
+				self.curCmd.pop()
+				self.SplitCheck()
+				print(self.curCmd)
 
 	def BackToCurMove(self):
 		if(len(self.curMove) > 0):
@@ -812,7 +909,7 @@ class Ui_MainWindow(object):
 		# self.timer[1].timeout.connect(functools.partial(self.blink, block=constants.UPPER_RIGHT))
 		# self.timer[2].timeout.connect(functools.partial(self.blink, block=constants.LOWER_LEFT))
 		# self.timer[3].timeout.connect(functools.partial(self.blink, block=constants.LOWER_RIGHT))
-		self.timer[0].timeout.connect(self.getComand)
+		self.timer[0].timeout.connect(self.getCommand)
 		self.timer[0].start(0.25)
 		# start QTimer (start to blink)
 		# for i in range(0, 4):
