@@ -355,7 +355,7 @@ class GraphFrame(wx.Frame):
 			self.SendTo(result)
 			self.check_timer.Stop()
 			f.close()
-			#os.remove('result.txt')
+			os.remove('result.txt')
 
 
 	def auto_disconnect(self, event, e):
