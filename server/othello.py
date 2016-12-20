@@ -448,10 +448,6 @@ class Ui_MainWindow(object):
 
 		return split_list
 
-	# commands = ["3", "2", "X", "2", "3", "X", "2", "2", "2"]
-	# print (split_by_binary_serach([1,2,3,4,5,6,7,8], commands))
-	# print (commands)
-
 	def modification_date(self,filename):
 	    t = os.path.getmtime(filename)
 	    return datetime.datetime.fromtimestamp(t)
@@ -462,6 +458,7 @@ class Ui_MainWindow(object):
 			self.curTime = t
 			f = open('chess.txt', 'r')
 			cmd = f.read().splitlines()
+			f.close()
 			if(len(cmd)>0):
 				if(cmd[-1] == "0"):
 					pass
