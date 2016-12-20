@@ -60,7 +60,14 @@ while True:
 			result = open('chess.txt', 'a')
 			result.write('1\n')
 			result.close()
-
+		elif(recv == 'result:2'):
+			result = open('chess.txt', 'a')
+			result.write('2\n')
+			result.close()
+		elif(recv == 'result:3'):
+			result = open('chess.txt', 'a')
+			result.write('3\n')
+			result.close()
 			# if data:
 			# 	print >>sys.stderr, 'sending data back to the client'
 			# 	connection.sendall(data)

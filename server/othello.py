@@ -4,7 +4,9 @@ from PyQt5.QtCore import pyqtSignal, QTimer
 import functools
 import sys
 import constants
-import time
+import os
+import datetime
+
 
 class QRightClickButton(QtWidgets.QPushButton):
 	def __init__(self, parent):
@@ -30,6 +32,8 @@ class Ui_MainWindow(object):
 	curMove = []
 	curBoard = []
 	curPlayer = []
+	curCmd = []
+	curTime = ""
 
 	screenWidth = 0
 	screenHeight = 0
@@ -77,7 +81,7 @@ class Ui_MainWindow(object):
 		# Shelter
 		#self.setShelter()
 		# timer
-		#self.setTimer()
+		self.setTimer()
 		#init
 		self.init()
 
@@ -247,7 +251,6 @@ class Ui_MainWindow(object):
 			self.grid[68].setVisible(False)
 			self.drawChess(grid, self.playerColor)
 			self.curPlayer.append(self.playerColor)
-			print('1:',self.curPlayer[-1])
 			self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
 			if self.playerColor == constants.WHITE:
 				self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
@@ -256,7 +259,6 @@ class Ui_MainWindow(object):
 			if(self.ValidMove() == 0):
 				self.curPlayer.append(self.playerColor)
 				self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
-				print('2:',self.curPlayer[-1])
 				self.JudgeState(self.ValidMove())
 
 	def drawChess(self, grid, color):
@@ -352,6 +354,8 @@ class Ui_MainWindow(object):
 				if(self.isValidMove(pos, False)):
 					self.validMoveList.append(pos)
 
+
+
 		L = range(0, int(len(self.validMoveList)/2))
 		R = range(int(len(self.validMoveList)/2), len(self.validMoveList))
 
@@ -373,13 +377,26 @@ class Ui_MainWindow(object):
 
 		return len(self.validMoveList)
 
+	def modification_date(self,filename):
+	    t = os.path.getmtime(filename)
+	    return datetime.datetime.fromtimestamp(t)
+
+	def getComand(self):
+		t = self.modification_date('chess.txt')
+		if(self.curTime != t):
+			self.curTime = t
+			f = open('chess.txt', 'r')
+			cmd = f.read().splitlines()
+			if(len(cmd)>0):
+				self.curCmd.append(cmd[-1])
+				print('7', self.curCmd)
+
 	def BackToCurMove(self):
 		if(len(self.curMove) > 0):
 			pos = self.curMove.pop()
 			self.placed[pos] = constants.EMPTY
 			self.grid[pos].setIcon(QtGui.QIcon(""))
 			self.playerColor = self.curPlayer.pop()
-			print('3:', self.curPlayer[-1])
 			if self.playerColor == constants.WHITE:
 				self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
 			else:
@@ -408,7 +425,6 @@ class Ui_MainWindow(object):
 	def JudgeState(self, state):
 		if(state == 0):
 			#game over
-			print('4:', self.curPlayer[-1])
 			b = self.placed.count(constants.BLACK)
 			w = self.placed.count(constants.WHITE)
 			if (w > b):
@@ -421,7 +437,6 @@ class Ui_MainWindow(object):
 			print(b,w,self.curPlayer[-1],'game over')
 		elif(state > 0):
 			#pass
-			print('5:', self.curPlayer[-1])
 			passPlayer = self.curPlayer.pop()
 			if passPlayer == constants.WHITE:
 				self.grid[68].setIcon(QtGui.QIcon("./src/white.png"))
@@ -665,6 +680,7 @@ class Ui_MainWindow(object):
 			self.text[i].setStyleSheet("background-color: " + constants.COLOR[i] +";"
 									   "border-color: rgb(102, 102, 255);"
 									   "font: 14pt \"Courier\";")
+
 	def setState(self):
 		XPos = self.stateXPos
 		YPos = self.stateYPos
@@ -792,14 +808,15 @@ class Ui_MainWindow(object):
 
 	def setTimer(self):
 		# connect QTimer
-		self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
-		self.timer[1].timeout.connect(functools.partial(self.blink, block=constants.UPPER_RIGHT))
-		self.timer[2].timeout.connect(functools.partial(self.blink, block=constants.LOWER_LEFT))
-		self.timer[3].timeout.connect(functools.partial(self.blink, block=constants.LOWER_RIGHT))
-
+		# self.timer[0].timeout.connect(functools.partial(self.blink, block=constants.UPPER_LEFT))
+		# self.timer[1].timeout.connect(functools.partial(self.blink, block=constants.UPPER_RIGHT))
+		# self.timer[2].timeout.connect(functools.partial(self.blink, block=constants.LOWER_LEFT))
+		# self.timer[3].timeout.connect(functools.partial(self.blink, block=constants.LOWER_RIGHT))
+		self.timer[0].timeout.connect(self.getComand)
+		self.timer[0].start(0.25)
 		# start QTimer (start to blink)
-		for i in range(0, 4):
-			self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
+		# for i in range(0, 4):
+		# 	self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
 
 class ExampleApp(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self):
