@@ -4,6 +4,7 @@ from PyQt5.QtCore import pyqtSignal, QTimer
 import functools
 import sys
 import constants
+import time
 
 class QRightClickButton(QtWidgets.QPushButton):
 	def __init__(self, parent):
@@ -24,6 +25,11 @@ class Ui_MainWindow(object):
 	text = []
 	grid = []
 	blinkShelter = []
+	current = []
+	validMoveList = []
+	curMove = []
+	curBoard = []
+	curPlayer = []
 
 	screenWidth = 0
 	screenHeight = 0
@@ -62,6 +68,8 @@ class Ui_MainWindow(object):
 		self.setFreqCtrl()
 		# player trun window
 		self.setPlayer()
+		# state
+		self.setState()
 		# menubar
 		self.setMenubar(MainWindow)
 		# menu
@@ -202,34 +210,54 @@ class Ui_MainWindow(object):
 ## action ##
 	def init(self):
 		self.playerColor = constants.BLACK
+		self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
+		self.grid[68].setVisible(False)
+		self.grid[69].setVisible(False)
+		self.grid[68].setIcon(QtGui.QIcon(""))
+		self.grid[69].setIcon(QtGui.QIcon(""))
 		self.state = constants.MAIN
 		self.zoomInIndex = -1
 		for i in range (0, 64):
 			self.placed[i] = constants.EMPTY
+			self.grid[i].setStyleSheet("background-color:"+ constants.COLOR[1] +";")
 		self.drawChess(self.grid[27], constants.WHITE)
 		self.drawChess(self.grid[28], constants.BLACK)
 		self.drawChess(self.grid[36], constants.WHITE)
 		self.drawChess(self.grid[35], constants.BLACK)
+		self.ValidMove()
 
 	def restart(self):
+		self.curMove = []
+		self.curBoard = []
+		self.curPlayer = []
 		for i in range(0, 64):
 			self.grid[i].setIcon(QtGui.QIcon())
-			self.grid[i].setText(str(i + 1))
+			self.grid[i].setText("")
 		while self.state != constants.MAIN:
 			self.zoomOut()
 		self.init()
 
 	def placeChess(self, grid):
 		pos = int(grid.objectName())
+
 		if(self.placed[pos] != constants.EMPTY):
 			return
-		if(self.isValidMove(pos)):
+
+		if(self.isValidMove(pos, True)):
+			self.grid[68].setVisible(False)
 			self.drawChess(grid, self.playerColor)
+			self.curPlayer.append(self.playerColor)
+			print('1:',self.curPlayer[-1])
 			self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
 			if self.playerColor == constants.WHITE:
 				self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
 			else:
 				self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
+			if(self.ValidMove() == 0):
+				self.curPlayer.append(self.playerColor)
+				self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
+				print('2:',self.curPlayer[-1])
+				self.JudgeState(self.ValidMove())
 
 	def drawChess(self, grid, color):
 		if color == constants.WHITE:
@@ -282,12 +310,9 @@ class Ui_MainWindow(object):
 						    break
 						reverse_pos.append(x + y * 8)
 
-		for pos in reverse_pos:
-			self.drawChess(self.grid[pos], self.playerColor)
-
 		return reverse_pos
 
-	def isValidMove(self, pos_start):
+	def isValidMove(self, pos_start, isPlaceChess):
 		if(not self.isOnBoard(int(pos_start%8), int(pos_start/8)) or self.placed[pos_start] != constants.EMPTY):
 			return False
 
@@ -300,7 +325,116 @@ class Ui_MainWindow(object):
 		if len(reverse_pos) == 0:
 			return False
 
+		if(isPlaceChess):
+			self.curBoard.append(self.placed.copy())
+			for pos in reverse_pos:
+				self.drawChess(self.grid[pos], self.playerColor)
+			self.curMove.append(pos_start)
+
 		return True
+
+	def ValidMove(self):
+		self.current = self.validMoveList.copy()
+		for pos in self.current:
+			self.grid[pos].setStyleSheet("background-color:"+ constants.COLOR[1] +";")
+			self.grid[pos].setText("")
+
+		if(len(self.curMove) > 1):
+			self.grid[self.curMove[-2]].setStyleSheet("background-color:"+ constants.COLOR[1] +";")
+
+		if(len(self.curMove) > 0):
+			self.grid[self.curMove[-1]].setStyleSheet("background-color:"+ constants.COLOR[0] +";")
+
+		self.validMoveList = []
+		for x in range(0, 8):
+			for y in range(0, 8):
+				pos = x + y * 8
+				if(self.isValidMove(pos, False)):
+					self.validMoveList.append(pos)
+
+		L = range(0, int(len(self.validMoveList)/2))
+		R = range(int(len(self.validMoveList)/2), len(self.validMoveList))
+
+		for i in L:
+			pos = self.validMoveList[i]
+			self.grid[pos].setStyleSheet("border-color: rgb(255, 255, 255);"
+										"font: 550 40pt \"Helvetica\";"
+										"color: white;"
+										"background-color:"+ constants.COLOR[2] +";")
+			self.grid[pos].setText(str(i + 1))
+
+		for i in R:
+			pos = self.validMoveList[i]
+			self.grid[pos].setStyleSheet("border-color: rgb(255, 255, 255);"
+										"font: 550 40pt \"Helvetica\";"
+										"color: black;"
+										"background-color:"+ constants.COLOR[3] +";")
+			self.grid[pos].setText(str(i + 1))
+
+		return len(self.validMoveList)
+
+	def BackToCurMove(self):
+		if(len(self.curMove) > 0):
+			pos = self.curMove.pop()
+			self.placed[pos] = constants.EMPTY
+			self.grid[pos].setIcon(QtGui.QIcon(""))
+			self.playerColor = self.curPlayer.pop()
+			print('3:', self.curPlayer[-1])
+			if self.playerColor == constants.WHITE:
+				self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
+			else:
+				self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
+
+			self.placed = self.curBoard.pop()
+
+			for x in range(0, 8):
+				for y in range(0, 8):
+					pos = x + y * 8
+					if(self.placed[pos] == constants.BLACK):
+						self.grid[pos].setIcon(QtGui.QIcon("./src/black.png"))
+					elif(self.placed[pos] == constants.WHITE):
+						self.grid[pos].setIcon(QtGui.QIcon("./src/white.png"))
+					elif(self.placed[pos] == constants.EMPTY):
+						self.grid[pos].setIcon(QtGui.QIcon(""))
+
+			if(self.ValidMove()==0):
+				if self.playerColor == constants.WHITE:
+					self.grid[68].setIcon(QtGui.QIcon("./src/black.png"))
+					self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
+				else:
+					self.grid[68].setIcon(QtGui.QIcon("./src/white.png"))
+					self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
+
+	def JudgeState(self, state):
+		if(state == 0):
+			#game over
+			print('4:', self.curPlayer[-1])
+			b = self.placed.count(constants.BLACK)
+			w = self.placed.count(constants.WHITE)
+			if (w > b):
+				self.grid[69].setIcon(QtGui.QIcon("./src/white.png"))
+			elif (b > w):
+				self.grid[69].setIcon(QtGui.QIcon("./src/black.png"))
+			elif (b == w):
+				self.grid[69].setText("平手")
+			self.grid[69].setVisible(True)
+			print(b,w,self.curPlayer[-1],'game over')
+		elif(state > 0):
+			#pass
+			print('5:', self.curPlayer[-1])
+			passPlayer = self.curPlayer.pop()
+			if passPlayer == constants.WHITE:
+				self.grid[68].setIcon(QtGui.QIcon("./src/white.png"))
+			else:
+				self.grid[68].setIcon(QtGui.QIcon("./src/black.png"))
+
+			if self.playerColor == constants.WHITE:
+				self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
+			else:
+				self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
+
+			self.grid[68].setVisible(True)
+
 ## freq ##
 	def editFreq(self):
 		for i in range(0, 4):
@@ -374,28 +508,34 @@ class Ui_MainWindow(object):
 		self.buttonWidth = self.screenWidth * (50/840)
 		self.buttonHeight = self.screenHeight * (60/680)
 
-		self.resetButtonWidth = self.screenWidth * (110/840)
-		self.resetButtonHeight = self.screenHeight * (130/680)
+		self.resetButtonWidth = self.screenWidth * (80/840)
+		self.resetButtonHeight = self.screenHeight * (100/680)
 		self.resetButtonXPos = self.screenWidth*(670/840) + constants.XSPACE
-		self.resetButtonYPos = self.screenHeight*(70/680) + constants.YSPACE
+		self.resetButtonYPos = self.screenHeight*(30/680) + constants.YSPACE
 
-		self.returnButtonWidth = self.screenWidth * (110/840)
-		self.returnButtonHeight = self.screenHeight * (130/680)
+		self.returnButtonWidth = self.screenWidth * (80/840)
+		self.returnButtonHeight = self.screenHeight * (100/680)
 		self.returnButtonXPos = self.screenWidth*(670/840) + constants.XSPACE
-		self.returnButtonYPos = self.screenHeight*(250/680) + constants.YSPACE
+		self.returnButtonYPos = self.screenHeight*(160/680) + constants.YSPACE
+
+		self.playerWidth = self.screenWidth * (80/840)
+		self.playerHeight = self.screenHeight * (100/680)
+		self.playerXPos = self.screenWidth*(670/840)+constants.XSPACE
+		self.playerYPos = self.screenHeight*(300/680)+constants.YSPACE
+
+		self.stateWidth = self.screenWidth * (80/840)
+		self.stateHeight = self.screenHeight * (50/680)
+		self.stateXPos = self.screenWidth*(670/840) + constants.XSPACE
+		self.stateYPos = self.screenHeight*(450/680) + constants.YSPACE
 
 		self.freqXPos = self.screenWidth*(670/840)+constants.XSPACE
-		self.freqYPos = self.screenHeight*(470/680)
-
-		self.playerXPos = self.screenWidth*(670/840)+constants.XSPACE
-		self.playerYPos = self.screenHeight*(470/680)
+		self.freqYPos = self.screenHeight*(470/680)+constants.YSPACE
 
 		self.boardWidth = self.screenWidth * (670/840)
 		self.boardHeight = self.screenHeight
 
 		self.startPosX = self.screenWidth * (1/7)
-		self.startPosY = self.screenHeight * (15/680)
-
+		self.startPosY = self.screenHeight * (30/680)
 
 	def center(self):
 		window = self.frameGeometry()
@@ -424,9 +564,10 @@ class Ui_MainWindow(object):
 				self.grid[i].setGeometry(QtCore.QRect(XPos, YPos, self.buttonWidth, self.buttonHeight))
 				self.grid[i].setStyleSheet("border-color: rgb(255, 255, 255);"
 												"font: 550 40pt \"Helvetica\";"
-												"color: white;"
-												"background-color:"+ constants.COLOR[int(x / 4) + int(y / 4) * 2] +";")
-				self.grid[i].setText(str(i + 1))
+												#"color: white;"
+												#"background-color:"+ constants.COLOR[int(x / 4) + int(y / 4) * 2] +";")
+												"background-color:"+ constants.COLOR[1] +";")
+				#self.grid[i].setText(str(i + 1))
 				self.grid[i].setAutoDefault(False)
 				self.grid[i].setObjectName(str(i))
 				self.grid[i].setIconSize(QtCore.QSize(55, 55))
@@ -465,7 +606,7 @@ class Ui_MainWindow(object):
 		self.grid[65].setEnabled(True)
 		self.grid[65].setAutoDefault(False)
 		self.grid[65].setFocusPolicy(QtCore.Qt.NoFocus)
-		self.grid[65].clicked.connect(self.zoomOut)
+		self.grid[65].clicked.connect(self.BackToCurMove)
 		self.grid[65].setStyleSheet("border-color: rgb(255, 255, 255);"
 									"background-color: rgb(19, 146, 59);")
 
@@ -496,7 +637,7 @@ class Ui_MainWindow(object):
 		YPos = self.playerYPos
 		self.grid.append(QRightClickButton(self.centralwidget))
 		self.grid[67].setObjectName("Player")
-		self.grid[67].setGeometry(QtCore.QRect(XPos, YPos, self.resetButtonWidth, self.resetButtonHeight))
+		self.grid[67].setGeometry(QtCore.QRect(XPos, YPos, self.playerWidth, self.playerHeight))
 		self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
 		self.grid[67].setIconSize(QtCore.QSize(55, 55))
 		self.grid[67].setEnabled(True)
@@ -524,6 +665,36 @@ class Ui_MainWindow(object):
 			self.text[i].setStyleSheet("background-color: " + constants.COLOR[i] +";"
 									   "border-color: rgb(102, 102, 255);"
 									   "font: 14pt \"Courier\";")
+	def setState(self):
+		XPos = self.stateXPos
+		YPos = self.stateYPos
+		self.grid.append(QRightClickButton(self.centralwidget))
+		self.grid[68].setText("Pass")
+		self.grid[68].setObjectName("place state")
+		self.grid[68].setGeometry(QtCore.QRect(XPos, YPos, self.stateWidth, self.stateHeight))
+		self.grid[68].setIcon(QtGui.QIcon(""))
+		self.grid[68].setIconSize(QtCore.QSize(30, 30))
+		self.grid[68].setEnabled(True)
+		self.grid[68].setAutoDefault(False)
+		self.grid[68].setFocusPolicy(QtCore.Qt.NoFocus)
+		self.grid[68].setVisible(False)
+		self.grid[68].setStyleSheet("border-color: rgb(255, 255, 255);"
+									"background-color: rgb(19, 146, 59);")
+
+		XPos = self.stateXPos
+		YPos = self.stateYPos + self.stateHeight + self.spaceHeight
+		self.grid.append(QRightClickButton(self.centralwidget))
+		self.grid[69].setText("Win")
+		self.grid[69].setObjectName("game state")
+		self.grid[69].setGeometry(QtCore.QRect(XPos, YPos, self.stateWidth, self.stateHeight))
+		self.grid[69].setIcon(QtGui.QIcon(""))
+		self.grid[69].setIconSize(QtCore.QSize(30, 30))
+		self.grid[69].setEnabled(True)
+		self.grid[69].setAutoDefault(False)
+		self.grid[69].setFocusPolicy(QtCore.Qt.NoFocus)
+		self.grid[69].setVisible(False)
+		self.grid[69].setStyleSheet("border-color: rgb(255, 255, 255);"
+									"background-color: rgb(19, 146, 59);")
 
 	def setMenubar(self, MainWindow):
 		MainWindow.setCentralWidget(self.centralwidget)
