@@ -8,6 +8,8 @@ import os
 import datetime
 import numpy as np
 import math
+import random
+import time
 
 
 class QRightClickButton(QtWidgets.QPushButton):
@@ -23,6 +25,9 @@ class Ui_MainWindow(object):
 	state = constants.MAIN
 	zoomInIndex = -1
 	setting = False
+	AI_mode = True
+	AI_color = constants.WHITE
+	AI_pos = -1
 
 	placed = [constants.EMPTY] * 64
 	timer = []
@@ -236,12 +241,39 @@ class Ui_MainWindow(object):
 		self.curMove = []
 		self.curBoard = []
 		self.curPlayer = []
+		self.curCmd = []
 		for i in range(0, 64):
 			self.grid[i].setIcon(QtGui.QIcon())
 			self.grid[i].setText("")
 		while self.state != constants.MAIN:
 			self.zoomOut()
 		self.init()
+
+	def AIplaceChess(self):
+		self.timer[1].stop()
+		print('AI')
+		grid = self.grid[self.AI_pos]
+		pos = int(grid.objectName())
+
+		if(self.placed[pos] != constants.EMPTY):
+			return
+
+		if(self.isValidMove(pos, True)):
+			self.grid[68].setVisible(False)
+			self.drawChess(grid, self.playerColor)
+			self.curPlayer.append(self.playerColor)
+			self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
+			if self.playerColor == constants.WHITE:
+				self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
+			else:
+				self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
+
+			if(self.ValidMove() == 0):
+				self.curPlayer.append(self.playerColor)
+				self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
+				self.JudgeState(self.ValidMove())
+
+
 
 	def placeChess(self, grid):
 		pos = int(grid.objectName())
@@ -258,10 +290,20 @@ class Ui_MainWindow(object):
 				self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
 			else:
 				self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
+
 			if(self.ValidMove() == 0):
 				self.curPlayer.append(self.playerColor)
 				self.playerColor =  constants.BLACK if self.playerColor == constants.WHITE else constants.WHITE
 				self.JudgeState(self.ValidMove())
+
+
+
+		self.AI_pos = self.AI()
+
+		if(self.AI_pos != -1):
+			self.timer[1].setInterval(2000)
+			self.timer[1].start()
+
 
 	def drawChess(self, grid, color):
 		if color == constants.WHITE:
@@ -452,6 +494,13 @@ class Ui_MainWindow(object):
 	    t = os.path.getmtime(filename)
 	    return datetime.datetime.fromtimestamp(t)
 
+	def AI(self):
+		if(self.playerColor != self.AI_color or not self.AI_mode):
+			return -1
+
+		return random.choice(self.validMoveList)
+
+
 	def getCommand(self):
 		t = self.modification_date('chess.txt')
 		if(self.curTime != t):
@@ -483,6 +532,8 @@ class Ui_MainWindow(object):
 
 	def CommandRevert(self):
 		if (len(self.curCmd) > 0 and self.curCmd[-1] == "X"):
+			if(self.AI_mode):
+				self.BackToCurMove()
 			self.curCmd.pop()
 			self.BackToCurMove()
 			self.curCmd.pop()
@@ -921,6 +972,8 @@ class Ui_MainWindow(object):
 		# self.timer[3].timeout.connect(functools.partial(self.blink, block=constants.LOWER_RIGHT))
 		self.timer[0].timeout.connect(self.getCommand)
 		self.timer[0].start(0.25)
+
+		self.timer[1].timeout.connect(self.AIplaceChess)
 		# start QTimer (start to blink)
 		# for i in range(0, 4):
 		# 	self.timer[i].start(constants.ONE_SEC/constants.FREQ[i])
