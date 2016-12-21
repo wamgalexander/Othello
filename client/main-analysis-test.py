@@ -5,6 +5,9 @@ from scipy.signal import butter, lfilter
 import glob, os, math, random
 from builtins import range
 from io import open
+import time
+import os.path
+
 
 FS = 500
 NFFT = 500
@@ -253,23 +256,34 @@ def cartesian(arrays, out=None):
 			out[j*m:(j+1)*m,1:] = out[0:m,1:]
 	return out
 
-data = load_signal_data(sys.argv[1])
+def setTimer(self):
+	self.timer[0].timeout.connect(self.getCommand)
+	self.timer[0].start(0.25)
+
+
 setting = np.load("nn_setting.npy")
 features_max = np.load("nn_features_max.npy")
 features_min = np.load("nn_features_min.npy")
-Y = nearest_neighbor_predict(data, setting, features_max, features_min)
-Y = Y.astype(int)
 
-score = np.zeros(CLASS_NUM)
-for i in range(0, CLASS_NUM):
-	score[i] = len(Y[Y == i])
+while (True):
+	time.sleep(0.25)
+	if (os.path.isfile("testing.txt")):
+		data = load_signal_data("testing.txt")
 
-mode_num = score[score == np.max(score)]
-if (len(mode_num) == 1):
-	result = np.argmax(score)
-else:
-	result = 0
+		Y = nearest_neighbor_predict(data, setting, features_max, features_min)
+		Y = Y.astype(int)
 
-f = open("result.txt", "w")
-f.write(unicode(result))    # unicode, not bytes
-f.close()
+		score = np.zeros(CLASS_NUM)
+		for i in range(0, CLASS_NUM):
+			score[i] = len(Y[Y == i])
+
+		mode_num = score[score == np.max(score)]
+		if (len(mode_num) == 1):
+			result = np.argmax(score)
+		else:
+			result = 0
+
+		f = open("result.txt", "w")
+		f.write(unicode(result))    # unicode, not bytes
+		f.close()
+		os.remove("testing.txt")
