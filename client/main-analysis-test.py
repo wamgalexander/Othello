@@ -283,6 +283,7 @@ while (True):
 		else:
 			result = 0
 
+		print (result)
 		f = open("result.txt", "w")
 		f.write(unicode(result))    # unicode, not bytes
 		f.close()

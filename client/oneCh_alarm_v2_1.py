@@ -1,6 +1,7 @@
 import sys
 import wx
 import logging
+from shutil import copyfile
 
 # 1051108
 import ctypes    #library used here for handling/accessing dlls
@@ -377,6 +378,9 @@ class GraphFrame(wx.Frame):
 		self.check_timer.Start(500)
 		self.comport_control.connect_button.Enable()
 		self.comport_control.disconnect_button.Disable()
+		filename = "./rawData/"+self.comport_control.file_textctrl.GetValue()+".txt"
+		copyfile(filename, "./testing.txt")				
+
 		print "disconnect!"
 
 	def SendTo(self, message):
