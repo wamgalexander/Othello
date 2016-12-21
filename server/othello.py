@@ -461,15 +461,25 @@ class Ui_MainWindow(object):
 			f.close()
 			if(len(cmd)>0):
 				if(cmd[-1] == "0"):
-					pass
+					self.grid[67].setIcon(QtGui.QIcon("./src/reject.png"))
+					print(self.curCmd)
 				elif(cmd[-1] == "1"):
 					self.CommandRevert()
+					if self.playerColor == constants.WHITE:
+						self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
+					else:
+						self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
 				else:
 					self.curCmd.append(cmd[-1])
 					pos = self.SplitCheck()
+					if self.playerColor == constants.WHITE:
+						self.grid[67].setIcon(QtGui.QIcon("./src/white.png"))
+					else:
+						self.grid[67].setIcon(QtGui.QIcon("./src/black.png"))
 					print(self.curCmd)
 					if(len(self.curCmd) > 0 and self.curCmd[-1] == "X"):
 						self.placeChess(self.grid[pos])
+
 
 	def CommandRevert(self):
 		if (len(self.curCmd) > 0 and self.curCmd[-1] == "X"):
@@ -482,7 +492,10 @@ class Ui_MainWindow(object):
 		else:
 			if (len(self.curCmd) > 0):
 				self.curCmd.pop()
-				self.SplitCheck()
+				if(len(self.curCmd) > 0 and self.curCmd[-1] == "X"):
+					self.ValidMove()
+				else:
+					self.SplitCheck()
 				print(self.curCmd)
 
 	def BackToCurMove(self):
