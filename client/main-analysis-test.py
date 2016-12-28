@@ -171,6 +171,8 @@ def nearest_neighbor_predict(input, setting, features_max, features_min):
 	X[:, 1] *= FEATURE_2_SCALE
 	X[:, 2] *= FEATURE_3_SCALE
 
+
+	print (setting)
 	# loop over all test rows
 	for i in range(num_test):
 		#distances = np.sum(np.abs(setting - X[i,:]), axis = 1)
@@ -273,13 +275,20 @@ while (True):
 		Y = nearest_neighbor_predict(data, setting, features_max, features_min)
 		Y = Y.astype(int)
 
+
+		print (Y)
 		score = np.zeros(CLASS_NUM)
 		for i in range(0, CLASS_NUM):
 			score[i] = len(Y[Y == i])
 
+
+
 		mode_num = score[score == np.max(score)]
 		if (len(mode_num) == 1):
 			result = np.argmax(score)
+			if (result == 0 and score[result] >= len(Y) / 2 and 
+score[result] <= len(Y) * 3 / 4):
+				result = 3
 		else:
 			result = 0
 
